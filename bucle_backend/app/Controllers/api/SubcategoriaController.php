@@ -49,6 +49,7 @@ class SubcategoriaController extends ResourceController
 
             if (isset($json->nombre)) $data['nombre'] = $json->nombre;
             if (isset($json->emoji)) $data['emoji'] = $json->emoji;
+            if (isset($json->color)) $data['color'] = $json->color;
             if (isset($json->blocks)) $data['datos_extra'] = json_encode($json->blocks);
 
             if ($this->model->update($id, $data)) {
@@ -78,6 +79,7 @@ class SubcategoriaController extends ResourceController
                 'categoria_id' => $json->categoria_id,
                 'nombre'       => $json->nombre ?? 'Nuevo Evento',
                 'emoji'        => $json->emoji ?? '✨',
+                'color'        => $json->color ?? '#6366f1',
                 'descripcion'  => $json->descripcion ?? '',
                 'datos_extra'  => json_encode($json->blocks ?? [
                     ['id' => 'block-' . time(), 'type' => 'text', 'content' => '', 'style' => 'p']

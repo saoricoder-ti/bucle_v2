@@ -15,11 +15,16 @@
       
       <div>
         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Identidad / Color</label>
-        <div class="flex gap-3 mt-2">
-          <div class="w-8 h-8 rounded-full bg-indigo-500 cursor-pointer border-4 border-white shadow-sm ring-1 ring-slate-100"></div>
-          <div class="w-8 h-8 rounded-full bg-emerald-500 cursor-pointer border-4 border-white hover:shadow-md transition-all"></div>
-          <div class="w-8 h-8 rounded-full bg-amber-500 cursor-pointer border-4 border-white hover:shadow-md transition-all"></div>
-          <div class="w-8 h-8 rounded-full bg-rose-500 cursor-pointer border-4 border-white hover:shadow-md transition-all"></div>
+        <!-- Gama de colores expandida y responsiva -->
+        <div class="grid grid-cols-6 gap-3 mt-3">
+          <button 
+            v-for="color in availableColors" 
+            :key="color"
+            @click="store.activeSub.color = color"
+            class="w-8 h-8 rounded-full border-4 transition-all hover:scale-110 active:scale-90 shadow-sm"
+            :class="store.activeSub.color === color ? 'border-indigo-600 scale-110' : 'border-white'"
+            :style="{ backgroundColor: color }"
+          ></button>
         </div>
       </div>
     </section>
@@ -77,6 +82,14 @@ import { useCategoryStore } from '@/stores/categoryStore';
 import ImportLoader from './ImportLoader.vue';
 
 const store = useCategoryStore();
+
+// Gama de colores extendida (12 colores premium)
+const availableColors = [
+  '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', // Indigo, Violet, Fuchsia, Rose
+  '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', // Amber, Emerald, Cyan, Blue
+  '#475569', '#1e293b', '#ec4899', '#f97316'  // Slate, Dark, Pink, Orange
+];
+
 const funcs = [
   { label: 'Texto', type: 'text', icon: 'pi-align-left' },
   { label: 'Tabla', type: 'table', icon: 'pi-table' },

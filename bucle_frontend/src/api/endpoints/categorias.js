@@ -21,7 +21,12 @@ export const categoriasApi = {
   registrarCategoria: (data) => apiClient.post('/categorias', data),
 
   // Registra una nueva subcategoría (Evento/Ficha) vinculada a una categoría
-  registrarSubcategoria: (payload) => apiClient.post('/subcategorias', payload)
+  registrarSubcategoria: (payload) => apiClient.post('/subcategorias', payload),
+
+  // NUEVAS FUNCIONES DE GESTIÓN DE CATEGORÍA
+  updateCategory: (id, data) => apiClient.put(`/categorias/${id}`, data),
+  deleteCategory: (id) => apiClient.delete(`/categorias/${id}`),
+  duplicateCategory: (id) => apiClient.post(`/categorias/duplicate/${id}`)
 };
 
 export default categoriasApi;

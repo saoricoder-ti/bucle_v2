@@ -26,7 +26,9 @@
         </div>
 
         <header class="mb-10">
-          <h2 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Configurar Categoría</h2>
+          <h2 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">
+            {{ store.categoryFormMode === 'edit' ? 'Personalizar Bucle' : 'Configurar Categoría' }}
+          </h2>
           <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Identidad Visual</p>
         </header>
 
@@ -73,7 +75,7 @@
             class="flex-1 py-4 bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             <i v-if="store.loading" class="pi pi-spin pi-spinner text-xs"></i>
-            <span>{{ store.loading ? 'Sincronizando...' : 'Activar Categoría' }}</span>
+            <span>{{ store.categoryFormMode === 'edit' ? 'Guardar Cambios' : 'Activar Categoría' }}</span>
           </button>
         </div>
       </div>
@@ -82,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useCategoryStore } from '@/stores/categoryStore';
 import EmojiPicker from './EmojiPicker.vue';
 
@@ -94,7 +96,11 @@ const availableColors = [
   '#475569', '#1e293b', '#ec4899', '#f97316'  // Slate, Dark, Pink, Orange
 ];
 
-const form = ref({ nombre: '', emoji: '📁', color: '#6366f1' });
+const form = ref({ 
+  nombre: store.categoryFormMode === 'edit' ? store.activeCategory?.nombre : '', 
+  emoji: store.categoryFormMode === 'edit' ? store.activeCategory?.emoji : '📁', 
+  color: store.categoryFormMode === 'edit' ? (store.activeCategory?.color || '#6366f1') : '#6366f1' 
+});
 
 const handleSave = async () => {
   if (!form.value.nombre) return;

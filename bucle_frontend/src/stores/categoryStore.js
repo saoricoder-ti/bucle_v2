@@ -18,7 +18,9 @@ export const useCategoryStore = defineStore('category', {
     showSlashMenu: false,// Control del menú de comandos "/"
     isImporting: false,  // Estado de importación de archivos
     toast: { show: false, message: '' }, // Notificaciones flotantes
-    isCreatingCategory: false,           // Control de visibilidad del formulario de nueva categoría
+    isCreatingCategory: false,           // Control de visibilidad del formulario
+    categoryFormMode: 'create',          // 'create' o 'edit'
+    categoryEditingId: null,             // ID de la categoría que se está renombrando inline
   }),
 
   /**
@@ -64,12 +66,60 @@ export const useCategoryStore = defineStore('category', {
      */
     async addCategory(data) {
       try {
-        await categoriasApi.registrarCategoria(data);
+        if (this.categoryFormMode === 'edit' && this.activeCategory) {
+          await categoriasApi.updateCategory(this.activeCategory.id, data);
+          this.showSuccess('Bucle actualizado');
+        } else {
+          await categoriasApi.registrarCategoria(data);
+          this.showSuccess('Bucle creado exitosamente');
+        }
         await this.initApp(); // Refresca el sidebar
         this.isCreatingCategory = false;
-        this.showSuccess('Bucle creado exitosamente');
       } catch (err) {
-        console.error("Error al crear categoría genérica:", err);
+        console.error("Error al procesar categoría:", err);
+      }
+    },
+
+    /**
+     * 1.6 Elimina una categoría
+     */
+    async deleteCategory(id) {
+      if (!confirm('¿Estás seguro de eliminar este Bucle? Se borrarán todos sus eventos.')) return;
+      try {
+        await categoriasApi.deleteCategory(id);
+        this.activeCategory = null;
+        await this.initApp();
+        this.showSuccess('Bucle eliminado');
+      } catch (err) {
+        console.error("Error al eliminar:", err);
+      }
+    },
+
+    /**
+     * 1.7 Duplica una categoría
+     */
+    async duplicateCategory(id) {
+      try {
+        await categoriasApi.duplicateCategory(id);
+        await this.initApp();
+        this.showSuccess('Bucle duplicado correctamente');
+      } catch (err) {
+        console.error("Error al duplicar:", err);
+      }
+    },
+
+    /**
+     * 1.8 Renombra una categoría (Inline)
+     */
+    async renameCategory(id, newName) {
+      try {
+        await categoriasApi.updateCategory(id, { nombre: newName });
+        const cat = this.categories.find(c => c.id === id);
+        if (cat) cat.nombre = newName;
+        this.categoryEditingId = null;
+        this.showSuccess('Nombre actualizado');
+      } catch (err) {
+        console.error("Error al renombrar:", err);
       }
     },
 
@@ -126,6 +176,7 @@ export const useCategoryStore = defineStore('category', {
         await categoriasApi.updateSubcategory(this.activeSub.id, {
           nombre: this.activeSub.nombre,
           emoji: this.activeSub.emoji,
+          color: this.activeSub.color,
           descripcion: this.activeSub.descripcion,
           blocks: this.activeSub.blocks // El backend se encarga del json_encode
         });
@@ -197,8 +248,9 @@ export const useCategoryStore = defineStore('category', {
           categoria_id: this.activeCategory.id,
           nombre: 'Nuevo Evento',
           emoji: '✨',
+          color: '#6366f1', // Color inicial premium
           descripcion: 'Haz clic para editar...',
-          blocks: [] // El backend le dará bloques iniciales por defecto
+          blocks: [] 
         };
 
         const res = await categoriasApi.registrarSubcategoria(payload);

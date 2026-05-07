@@ -2,7 +2,8 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
-import './assets/main.css'; // Asegúrate de tener este archivo o quita la línea
+import './assets/main.css';
+import 'primeicons/primeicons.css';
 
 const app = createApp(App);
 const pinia = createPinia();
