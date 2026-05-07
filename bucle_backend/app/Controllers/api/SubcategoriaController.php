@@ -69,19 +69,37 @@ class SubcategoriaController extends ResourceController
     {
         try {
             $json = $this->request->getJSON();
+            
+            if (!$json || !isset($json->categoria_id)) {
+                return $this->fail('La categoría padre (categoria_id) es obligatoria', 400);
+            }
+
             $data = [
                 'categoria_id' => $json->categoria_id,
                 'nombre'       => $json->nombre ?? 'Nuevo Evento',
                 'emoji'        => $json->emoji ?? '✨',
                 'descripcion'  => $json->descripcion ?? '',
-                'datos_extra'  => json_encode($json->blocks ?? []),
-                'created_at'   => date('Y-m-d H:i:s')
+                'datos_extra'  => json_encode($json->blocks ?? [
+                    ['id' => 'block-' . time(), 'type' => 'text', 'content' => '', 'style' => 'p']
+                ])
             ];
 
             $id = $this->model->insert($data);
-            return $this->respondCreated(['id' => $id, 'status' => 'success']);
+            
+            if ($id) {
+                return $this->respondCreated([
+                    'status'  => 'success',
+                    'message' => 'Evento creado correctamente',
+                    'id'      => $id,
+                    'data'    => $data
+                ]);
+            }
+
+            return $this->fail('No se pudo crear el evento en la base de datos');
+
         } catch (\Exception $e) {
-            return $this->failServerError($e->getMessage());
+            log_message('error', '[SubcategoriaController::create] ' . $e->getMessage());
+            return $this->failServerError('Error interno: ' . $e->getMessage());
         }
     }
 }

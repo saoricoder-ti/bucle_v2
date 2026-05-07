@@ -1,18 +1,16 @@
 <template>
-  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl animate-modal-enter">
-    <div class="w-full max-w-xl bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 relative flex h-[500px] overflow-visible">
+  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-modal-enter">
+    <div class="w-full max-w-xl bg-white rounded-[3rem] shadow-2xl border border-slate-100 relative flex h-[500px] overflow-visible">
       
       <!-- Botón de Cerrar (Esquina Superior) -->
       <button 
         @click="store.isCreatingCategory = false" 
-        class="absolute -top-4 -right-4 w-10 h-10 bg-white dark:bg-slate-800 rounded-full shadow-xl flex items-center justify-center text-slate-400 hover:text-red-500 transition-all hover:rotate-90 z-[110] border border-slate-50 dark:border-slate-700"
+        class="absolute -top-4 -right-4 w-10 h-10 bg-white rounded-full shadow-xl flex items-center justify-center text-slate-400 hover:text-red-500 transition-all hover:rotate-90 z-[110] border border-slate-50"
       >
         <i class="pi pi-times"></i>
       </button>
 
       <!-- Franja lateral de color dinámico -->
-      <!-- :style="{ backgroundColor: form.color }": Este es el corazón visual del formulario. -->
-      <!-- El color seleccionado en la paleta se aplica aquí en tiempo real. -->
       <div 
         class="w-32 h-full transition-all duration-700 ease-in-out flex items-center justify-center shrink-0 rounded-l-[3rem]" 
         :style="{ backgroundColor: form.color }"
@@ -28,7 +26,7 @@
         </div>
 
         <header class="mb-10">
-          <h2 class="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-[0.2em] mb-2">Configurar Categoría</h2>
+          <h2 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Configurar Categoría</h2>
           <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Identidad Visual</p>
         </header>
 
@@ -37,11 +35,11 @@
           <div class="group">
             <input 
               v-model="form.nombre" 
-              class="w-full text-3xl font-black bg-transparent border-none focus:ring-0 p-0 text-slate-900 dark:text-white placeholder-slate-200 dark:placeholder-slate-800 tracking-tighter"
+              class="w-full text-3xl font-black bg-transparent border-none focus:ring-0 p-0 text-slate-900 placeholder-slate-200 tracking-tighter"
               placeholder="Nombre del Bucle..."
               autofocus
             />
-            <div class="h-0.5 w-full bg-slate-100 dark:bg-slate-800 mt-2 overflow-hidden rounded-full">
+            <div class="h-0.5 w-full bg-slate-100 mt-2 overflow-hidden rounded-full">
                <div class="h-full bg-indigo-500 transition-all duration-700 ease-out" :style="{ width: form.nombre ? '100%' : '0%' }"></div>
             </div>
           </div>
@@ -54,7 +52,7 @@
                 v-for="color in availableColors" :key="color"
                 @click="form.color = color"
                 class="w-8 h-8 rounded-full border-2 transition-all hover:scale-110 active:scale-90"
-                :class="form.color === color ? 'border-slate-900 dark:border-white shadow-xl scale-110 ring-2 ring-indigo-500/20' : 'border-transparent shadow-sm'"
+                :class="form.color === color ? 'border-slate-900 shadow-xl scale-110 ring-2 ring-indigo-500/20' : 'border-transparent shadow-sm'"
                 :style="{ backgroundColor: color }"
               ></button>
             </div>
@@ -65,7 +63,7 @@
         <div class="absolute bottom-12 left-12 right-12 flex items-center gap-6">
           <button 
             @click="store.isCreatingCategory = false" 
-            class="text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            class="text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 transition-colors"
           >
             Cancelar
           </button>
@@ -90,7 +88,6 @@ import EmojiPicker from './EmojiPicker.vue';
 
 const store = useCategoryStore();
 
-// Gama de colores ampliada (vibrante y premium)
 const availableColors = [
   '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', // Indigo, Violet, Fuchsia, Rose
   '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', // Amber, Emerald, Cyan, Blue
@@ -101,8 +98,6 @@ const form = ref({ nombre: '', emoji: '📁', color: '#6366f1' });
 
 const handleSave = async () => {
   if (!form.value.nombre) return;
-  
-  // Llamamos a la acción del store que ahora sí está conectada a la API
   await store.addCategory({ ...form.value });
 };
 </script>

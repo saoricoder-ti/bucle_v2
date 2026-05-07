@@ -4,7 +4,7 @@
     <div 
       v-if="block.type === 'text'"
       ref="editableDiv"
-      class="outline-none focus:bg-gray-50/50 dark:focus:bg-slate-800/50 p-2 rounded-xl transition-all relative text-left whitespace-pre-wrap break-words ltr text-slate-900 dark:text-white"
+      class="outline-none focus:bg-gray-50/50 p-2 rounded-xl transition-all relative text-left whitespace-pre-wrap break-words ltr text-slate-900"
       :contenteditable="!readOnly"
       @input="handleInput"
       @focus="isFocused = true"
@@ -32,7 +32,7 @@
     />
 
     <!-- Bloque de Imagen -->
-    <div v-else-if="block.type === 'image'" class="my-4 rounded-3xl overflow-hidden border border-gray-100 dark:border-slate-800 shadow-sm transition-transform hover:scale-[1.01] duration-500">
+    <div v-else-if="block.type === 'image'" class="my-4 rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-transform hover:scale-[1.01] duration-500">
       <img :src="block.content" class="w-full h-auto object-cover max-h-[500px]" />
     </div>
 
@@ -58,45 +58,27 @@ const store = useCategoryStore();
 const editableDiv = ref(null);
 const isFocused = ref(false);
 
-/**
- * 1. Sincronización Inicial Manual
- * Cargamos el contenido directamente al DOM una sola vez para evitar
- * el conflicto de las llaves {{ }} o v-text.
- */
 onMounted(() => {
   if (editableDiv.value) {
     editableDiv.value.innerText = props.block.content || '';
   }
 });
 
-/**
- * 2. ESCUDO DE REACTIVIDAD
- * Este watcher solo actualiza el DOM si el cambio viene de afuera (ej. carga inicial),
- * pero se mantiene en silencio mientras el usuario está escribiendo (isFocused).
- */
 watch(() => props.block.content, (newVal) => {
   if (editableDiv.value && !isFocused.value && editableDiv.value.innerText !== newVal) {
     editableDiv.value.innerText = newVal || '';
   }
 });
 
-/**
- * 3. Entrada de Texto Silenciosa
- * Actualizamos la referencia del objeto directamente. Como el padre (EditorCanvas)
- * tiene un watcher con debounce, el auto-guardado funcionará perfectamente.
- */
 const handleInput = (e) => {
   if (props.readOnly) return;
   // eslint-disable-next-line vue/no-mutating-props
   props.block.content = e.target.innerText;
 };
 
-/**
- * 4. Gestión de Foco y Guardado Final
- */
 const handleBlur = () => {
   isFocused.value = false;
-  store.saveActiveSub(); // Forzamos sincronización final con el backend
+  store.saveActiveSub();
 };
 
 const placeholder = computed(() => {

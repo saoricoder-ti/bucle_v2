@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { entidadesApi } from '@/api/endpoints/entidades';
+import { categoriasApi } from '@/api/endpoints/categorias';
 
 export const useCategoryStore = defineStore('category', {
   /**
@@ -64,7 +64,7 @@ export const useCategoryStore = defineStore('category', {
      */
     async addCategory(data) {
       try {
-        await entidadesApi.registrarCategoria(data);
+        await categoriasApi.registrarCategoria(data);
         await this.initApp(); // Refresca el sidebar
         this.isCreatingCategory = false;
         this.showSuccess('Bucle creado exitosamente');
@@ -79,7 +79,7 @@ export const useCategoryStore = defineStore('category', {
     async initApp() {
       this.loading = true;
       try {
-        const res = await entidadesApi.fetchCategories();
+        const res = await categoriasApi.fetchCategories();
         this.categories = res.data;
         
         // Seleccionamos la primera por defecto si no hay ninguna activa
@@ -102,11 +102,11 @@ export const useCategoryStore = defineStore('category', {
       this.view = 'dashboard';
       this.loading = true;
       try {
-        const res = await entidadesApi.fetchSubcategories(cat.id);
+        const res = await categoriasApi.fetchSubcategories(cat.id);
         this.subcategories = res.data;
         
         // También intentamos cargar el esquema de la categoría
-        const schemaRes = await entidadesApi.getSchema(cat.id);
+        const schemaRes = await categoriasApi.getSchema(cat.id);
         this.schema = schemaRes.data;
       } catch (err) {
         console.warn(`No se pudo cargar el esquema para ${cat.nombre}, usando genérico.`);
@@ -123,7 +123,7 @@ export const useCategoryStore = defineStore('category', {
       if (!this.activeSub) return;
       
       try {
-        await entidadesApi.updateSubcategory(this.activeSub.id, {
+        await categoriasApi.updateSubcategory(this.activeSub.id, {
           nombre: this.activeSub.nombre,
           emoji: this.activeSub.emoji,
           descripcion: this.activeSub.descripcion,
@@ -142,10 +142,13 @@ export const useCategoryStore = defineStore('category', {
       this.activeSub = this.subcategories.find(s => s.id === sub.id) || sub;
       this.view = 'editor';
       
-      // Inicializamos con un bloque de título si está vacío, usando un 'role' fijo
+      // Inicializamos bloques si están vacíos
       if (!this.activeSub.blocks || this.activeSub.blocks.length === 0) {
         this.activeSub.blocks = [
-          { id: 'title-' + Date.now(), type: 'text', content: sub.nombre, style: 'h1', role: 'main-title' }
+          // Bloque de título (oculto en el canvas, se usa para el breadcrumb/H1)
+          { id: 'title-' + Date.now(), type: 'text', content: sub.nombre, style: 'h1', role: 'main-title' },
+          // Primer bloque de texto real para que el usuario empiece a escribir
+          { id: 'start-' + Date.now(), type: 'text', content: '', style: 'p' }
         ];
       }
     },
@@ -183,21 +186,40 @@ export const useCategoryStore = defineStore('category', {
     },
 
     /**
-     * Crea una nueva subcategoría vacía
+     * 1.6 Crea una nueva subcategoría real en la DB vinculada a la activa
      */
     async createNewSub() {
       if (!this.activeCategory) return;
       
-      const newSub = {
-        id: Date.now(), // En prod esto lo daría la DB
-        nombre: 'Nuevo Evento',
-        emoji: '✨',
-        descripcion: 'Haz clic para editar...',
-        blocks: []
-      };
-      
-      this.subcategories.unshift(newSub);
-      this.openEditor(newSub);
+      this.loading = true;
+      try {
+        const payload = {
+          categoria_id: this.activeCategory.id,
+          nombre: 'Nuevo Evento',
+          emoji: '✨',
+          descripcion: 'Haz clic para editar...',
+          blocks: [] // El backend le dará bloques iniciales por defecto
+        };
+
+        const res = await categoriasApi.registrarSubcategoria(payload);
+        
+        if (res.data.status === 'success') {
+          // Construimos el objeto local con el ID real devuelto por la DB
+          const createdSub = {
+            id: res.data.id,
+            ...payload
+          };
+
+          this.subcategories.unshift(createdSub);
+          this.openEditor(createdSub);
+          this.showSuccess('Nuevo evento activado');
+        }
+      } catch (err) {
+        console.error("Error al crear subcategoría:", err);
+        this.error = "No se pudo crear el evento";
+      } finally {
+        this.loading = false;
+      }
     },
 
     /**
@@ -209,7 +231,7 @@ export const useCategoryStore = defineStore('category', {
       
       // Sincronizamos en segundo plano para no bloquear la UI
       if (this.activeCategory) {
-        entidadesApi.fetchSubcategories(this.activeCategory.id).then(res => {
+        categoriasApi.fetchSubcategories(this.activeCategory.id).then(res => {
           this.subcategories = res.data;
         }).catch(err => console.error("Error al refrescar dashboard:", err));
       }

@@ -17,14 +17,11 @@
     overflow: hidden;
   }
 
-  /* 4. DEFINICIÓN DE FONDOS */
+  /* 4. DEFINICIÓN DE FONDO ÚNICO (NOTION LIGHT) */
   body {
     background-color: #fbfbfa;
-    @apply transition-colors duration-500 antialiased;
-  }
-
-  html.dark body {
-    background-color: #191919;
+    color: #0f172a; /* Slate 900 */
+    @apply antialiased transition-colors duration-300;
   }
 
   /* 5. RESETEO DE ENFOQUE Y INPUTS */
@@ -35,22 +32,18 @@
 
   [contenteditable]:empty:before {
     content: attr(data-placeholder);
-    color: #94a3b8;
+    color: #94a3b8; /* Slate 400 */
     font-style: italic;
     pointer-events: none;
     display: block;
   }
 
   [contenteditable]:focus {
-    background: rgba(249, 250, 251, 0.5);
-  }
-  .dark [contenteditable]:focus {
-    background: rgba(30, 41, 59, 0.5);
+    background: rgba(241, 245, 249, 0.5); /* Slate 50 */
   }
 }
 
 @layer components {
-  /* 6. CLASES DE COMPONENTES */
   .notion-input {
     @apply w-full border-none focus:ring-0 bg-transparent p-0 transition-all;
   }
@@ -64,7 +57,7 @@
   }
 }
 
-/* 7. SCROLLBARS PREMIUM */
+/* 6. SCROLLBARS PREMIUM (MODO CLARO) */
 .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { 
@@ -73,11 +66,9 @@
   border: 1px solid transparent;
   background-clip: content-box;
 }
-.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-/* 8. TRANSICIONES GLOBALES (VUE) */
+/* 7. TRANSICIONES GLOBALES */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
@@ -87,22 +78,6 @@
 .fade-slide-enter-from { opacity: 0; transform: translateY(10px); }
 .fade-slide-leave-to { opacity: 0; transform: translateY(-10px); }
 
-.slide-right-enter-active, .slide-right-leave-active {
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
-}
-.slide-right-enter-from, .slide-right-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
-}
-
-.scale-fade-enter-active, .scale-fade-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.scale-fade-enter-from, .scale-fade-leave-to {
-  opacity: 0;
-  transform: scale(0.5) rotate(-45deg);
-}
-
 .toast-fade-enter-active, .toast-fade-leave-active { 
   transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
 }
@@ -111,30 +86,12 @@
   transform: translate(-50%, 40px) scale(0.9); 
 }
 
-/* 9. ANIMACIONES (KEYFRAMES) */
+/* 8. ANIMACIONES */
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 .animate-spin-slow { animation: spin-slow 12s linear infinite; }
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes scan {
-  0% { top: 0%; opacity: 0; }
-  50% { opacity: 1; }
-  100% { top: 100%; opacity: 0; }
-}
-.animate-scan { animation: scan 2s infinite ease-in-out; }
-
-@keyframes progress {
-  0% { width: 0%; }
-  100% { width: 100%; }
-}
-.animate-progress { animation: progress 3s infinite linear; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(15px); }
