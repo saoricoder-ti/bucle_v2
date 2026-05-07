@@ -1,0 +1,15 @@
+# Ignorar dependencias
+**/node_modules/
+**/vendor/
+
+# Ignorar archivos locales de entorno
+**/.env
+**/.env.local
+
+# Ignorar logs y temporales
+**/writable/logs/
+**/writable/debugbar/
+**/writable/session/
+**/writable/cache/
+.DS_Store
+Thumbs.db
