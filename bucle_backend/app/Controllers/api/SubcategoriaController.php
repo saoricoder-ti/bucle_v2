@@ -97,11 +97,15 @@ class SubcategoriaController extends ResourceController
                 ]);
             }
 
-            return $this->fail('No se pudo crear el evento en la base de datos');
+            return $this->fail($this->model->errors());
 
         } catch (\Exception $e) {
             log_message('error', '[SubcategoriaController::create] ' . $e->getMessage());
-            return $this->failServerError('Error interno: ' . $e->getMessage());
+            return $this->respond([
+                'status'  => 'error',
+                'message' => 'Exception: ' . $e->getMessage(),
+                'trace'   => $e->getTraceAsString()
+            ], 500);
         }
     }
 
