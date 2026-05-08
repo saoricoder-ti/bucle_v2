@@ -37,24 +37,46 @@
         </header>
 
         <!-- Bloques de Contenido -->
-        <div class="space-y-6 min-h-[500px]">
-          <BlockRenderer 
-            v-for="block in contentBlocks" 
-            :key="block.id" 
-            :block="block" 
-          />
-          
-          <!-- Área de click para añadir bloque al final -->
-          <div 
-            @click="focusLast" 
-            class="h-40 cursor-text group/area relative"
-            @keyup.slash="store.showSlashMenu = true"
-          >
-             <div class="absolute inset-x-0 top-0 h-px bg-slate-50 opacity-0 group-hover/area:opacity-100 transition-opacity"></div>
-             <p class="text-[10px] text-slate-300 mt-4 opacity-0 group-hover/area:opacity-100 transition-opacity uppercase font-bold tracking-widest">
-               Escribe '/' para insertar comandos...
-             </p>
-          </div>
+        <draggable 
+          v-model="draggableBlocks" 
+          item-key="id"
+          class="space-y-6 min-h-[500px]"
+          handle=".drag-handle"
+          ghost-class="drag-ghost"
+          animation="300"
+        >
+          <template #item="{ element }">
+            <div class="group relative p-4 border border-transparent hover:border-slate-200 hover:bg-slate-50/50 rounded-2xl transition-all duration-300">
+              <!-- Tirador de arrastre (Drag Handle) -->
+              <div class="drag-handle absolute top-3 right-3 opacity-0 group-hover:opacity-100 cursor-move text-slate-400 hover:text-slate-600 transition-all p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 z-20 hover:scale-110 hover:shadow-md">
+                <i class="pi pi-arrows-alt text-xs"></i>
+              </div>
+              <BlockRenderer 
+                :block="element" 
+              />
+            </div>
+          </template>
+        </draggable>
+        
+        <!-- Botón Añadir Propiedad -->
+        <button 
+          @click="store.addBlock('text')" 
+          class="flex items-center gap-2 text-slate-400 hover:text-slate-600 font-medium text-sm p-2 rounded-lg hover:bg-slate-50 transition-colors mt-2 mb-4"
+        >
+          <i class="pi pi-plus text-xs"></i>
+          Añadir una propiedad
+        </button>
+
+        <!-- Área de click para añadir bloque al final -->
+        <div 
+          @click="focusLast" 
+          class="h-40 cursor-text group/area relative mt-6"
+          @keyup.slash="store.showSlashMenu = true"
+        >
+           <div class="absolute inset-x-0 top-0 h-px bg-slate-50 opacity-0 group-hover/area:opacity-100 transition-opacity"></div>
+           <p class="text-[10px] text-slate-300 mt-4 opacity-0 group-hover/area:opacity-100 transition-opacity uppercase font-bold tracking-widest">
+             Escribe '/' para insertar comandos...
+           </p>
         </div>
 
         <!-- Slash Menu Flotante -->
@@ -83,15 +105,27 @@
 import { computed, watch } from 'vue';
 import { useCategoryStore } from '@/stores/categoryStore';
 import debounce from 'lodash.debounce';
+import draggable from 'vuedraggable';
 import EmojiPicker from '@/components/dynamic/EmojiPicker.vue';
 import BlockRenderer from '@/components/dynamic/BlockRenderer.vue';
 import SlashMenu from '@/components/dynamic/SlashMenu.vue';
 
 const store = useCategoryStore();
 
-const contentBlocks = computed(() => {
-  if (!store.activeSub?.blocks) return [];
-  return store.activeSub.blocks.filter(b => b.role !== 'main-title');
+const draggableBlocks = computed({
+  get() {
+    if (!store.activeSub?.blocks) return [];
+    return store.activeSub.blocks.filter(b => b.role !== 'main-title');
+  },
+  set(newValue) {
+    if (!store.activeSub) return;
+    const mainTitleBlock = store.activeSub.blocks.find(b => b.role === 'main-title');
+    if (mainTitleBlock) {
+      store.activeSub.blocks = [mainTitleBlock, ...newValue];
+    } else {
+      store.activeSub.blocks = newValue;
+    }
+  }
 });
 
 watch(
@@ -111,3 +145,12 @@ const focusLast = () => {
   }
 };
 </script>
+
+<style scoped>
+.drag-ghost {
+  opacity: 0.4;
+  background-color: #f8fafc; /* slate-50 */
+  border: 2px dashed #cbd5e1; /* slate-300 */
+  border-radius: 1rem; /* matches rounded-2xl */
+}
+</style>
