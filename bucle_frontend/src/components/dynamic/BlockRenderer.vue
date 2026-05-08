@@ -31,6 +31,16 @@
       :readOnly="readOnly" 
     />
 
+    <!-- Bloque de Calendario -->
+    <CalendarBlock
+      v-else-if="block.type === 'calendar'"
+      :block="block"
+      :readOnly="readOnly"
+    />
+
+    <!-- Bloque de Lista -->
+    <ListBlock v-else-if="block.type === 'list'" :block="block" :readOnly="readOnly" />
+
     <!-- Bloque de Imagen -->
     <div v-else-if="block.type === 'image'" class="my-4 rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-transform hover:scale-[1.01] duration-500">
       <img :src="block.content" class="w-full h-auto object-cover max-h-[500px]" />
@@ -48,6 +58,8 @@ import { computed, ref, onMounted, watch } from 'vue';
 import { useCategoryStore } from '@/stores/categoryStore';
 import TableBlock from './TableBlock.vue';
 import MapBlock from './MapBlock.vue';
+import CalendarBlock from './CalendarBlock.vue';
+import ListBlock from './ListBlock.vue';
 
 const props = defineProps({
   block: { type: Object, required: true },

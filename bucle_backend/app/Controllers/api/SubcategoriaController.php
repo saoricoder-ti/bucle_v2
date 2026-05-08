@@ -104,4 +104,41 @@ class SubcategoriaController extends ResourceController
             return $this->failServerError('Error interno: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Elimina una subcategoría (Evento)
+     * DELETE /api/subcategorias/(:num)
+     */
+    public function delete($id = null) {
+        try {
+            if ($this->model->delete($id)) {
+                return $this->respondDeleted(['status' => 'success']);
+            }
+            return $this->fail("No se pudo eliminar");
+        } catch (\Exception $e) {
+            return $this->failServerError($e->getMessage());
+        }
+    }
+
+    /**
+     * Duplica un evento con todos sus bloques
+     * POST /api/subcategorias/duplicate/(:num)
+     */
+    public function duplicate($id) {
+        try {
+            $original = $this->model->find($id);
+            if (!$original) return $this->failNotFound();
+
+            unset($original['id']);
+            $original['nombre'] .= " (Copia)";
+            $original['created_at'] = date('Y-m-d H:i:s');
+
+            if ($newId = $this->model->insert($original)) {
+                return $this->respondCreated(['status' => 'success', 'id' => $newId]);
+            }
+            return $this->fail("Error al duplicar evento");
+        } catch (\Exception $e) {
+            return $this->failServerError($e->getMessage());
+        }
+    }
 }

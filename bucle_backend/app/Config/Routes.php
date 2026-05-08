@@ -20,5 +20,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     // Rutas de Subcategorías (Eventos)
     $routes->get('subcategorias/(:num)', 'SubcategoriaController::filterByCategory/$1');
     $routes->put('subcategorias/(:num)', 'SubcategoriaController::update/$1');
+    $routes->delete('subcategorias/(:num)', 'SubcategoriaController::delete/$1');
+    $routes->post('subcategorias/duplicate/(:num)', 'SubcategoriaController::duplicate/$1');
     $routes->post('subcategorias', 'SubcategoriaController::create');
 });

@@ -32,7 +32,7 @@
         <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-white transition-colors shadow-sm">
           <i class="pi pi-plus text-slate-400 group-hover:text-indigo-500"></i>
         </div>
-        <span class="text-xs font-bold text-slate-400 group-hover:text-indigo-600 uppercase tracking-tighter">Añadir Evento</span>
+        <span class="text-xs font-bold text-slate-400 group-hover:text-indigo-600 uppercase tracking-tighter">Añadir Subcategoria</span>
       </button>
     </div>
   </div>

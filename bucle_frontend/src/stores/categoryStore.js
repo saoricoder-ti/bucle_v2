@@ -21,6 +21,7 @@ export const useCategoryStore = defineStore('category', {
     isCreatingCategory: false,           // Control de visibilidad del formulario
     categoryFormMode: 'create',          // 'create' o 'edit'
     categoryEditingId: null,             // ID de la categoría que se está renombrando inline
+    subEditingId: null,                  // ID de la subcategoría que se está renombrando inline
   }),
 
   /**
@@ -225,7 +226,9 @@ export const useCategoryStore = defineStore('category', {
         id: Date.now(),
         type: type,
         content: type === 'map' ? { lat: -0.1807, lng: -78.4678 } : 
-                 type === 'table' ? { columns: ['Col 1', 'Col 2'], rows: [] } : '',
+                 type === 'table' ? { columns: ['Col 1', 'Col 2'], rows: [] } :
+                 type === 'calendar' ? { selectedDate: new Date().toISOString(), events: [] } :
+                 type === 'list' ? { items: [''] } : '',
         style: type === 'text' ? 'p' : null
       };
 
@@ -286,6 +289,51 @@ export const useCategoryStore = defineStore('category', {
         categoriasApi.fetchSubcategories(this.activeCategory.id).then(res => {
           this.subcategories = res.data;
         }).catch(err => console.error("Error al refrescar dashboard:", err));
+      }
+    },
+
+    /**
+     * 1.9 Renombra una subcategoría (Inline)
+     */
+    async renameSubcategory(id, newName) {
+      try {
+        await categoriasApi.updateSubcategory(id, { nombre: newName });
+        const sub = this.subcategories.find(s => s.id === id);
+        if (sub) sub.nombre = newName;
+        this.subEditingId = null;
+        this.showSuccess('Evento renombrado');
+      } catch (err) {
+        console.error("Error al renombrar subcategoría:", err);
+      }
+    },
+
+    /**
+     * 2.0 Elimina una subcategoría
+     */
+    async deleteSubcategory(id) {
+      if (!confirm('¿Eliminar este evento de forma permanente?')) return;
+      try {
+        await categoriasApi.deleteSubcategory(id);
+        this.subcategories = this.subcategories.filter(s => s.id !== id);
+        this.showSuccess('Evento eliminado');
+      } catch (err) {
+        console.error("Error al eliminar subcategoría:", err);
+      }
+    },
+
+    /**
+     * 2.1 Duplica una subcategoría
+     */
+    async duplicateSubcategory(id) {
+      try {
+        const res = await categoriasApi.duplicateSubcategory(id);
+        if (res.data.status === 'success') {
+          const subRes = await categoriasApi.fetchSubcategories(this.activeCategory.id);
+          this.subcategories = subRes.data;
+          this.showSuccess('Evento duplicado');
+        }
+      } catch (err) {
+        console.error("Error al duplicar subcategoría:", err);
       }
     }
   }

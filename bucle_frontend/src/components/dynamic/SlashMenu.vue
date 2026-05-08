@@ -38,7 +38,9 @@ const options = [
   { label: 'Texto', type: 'text', icon: 'pi-align-left', desc: 'Escribe con estilo Notion' },
   { label: 'Tabla', type: 'table', icon: 'pi-table', desc: 'Importa CSV o crea manual' },
   { label: 'Mapa', type: 'map', icon: 'pi-map', desc: 'Ubicación de eventos' },
-  { label: 'Imagen', type: 'image', icon: 'pi-image', desc: 'Sube fotos o capturas' }
+  { label: 'Imagen', type: 'image', icon: 'pi-image', desc: 'Sube fotos o capturas' },
+  { label: 'Calendario', type: 'calendar', icon: 'pi-calendar', desc: 'Planificador visual' },
+  { label: 'Lista', type: 'list', icon: 'pi-list', desc: 'Lista de viñetas' }
 ];
 
 const selectOption = (type) => emit('select', type);

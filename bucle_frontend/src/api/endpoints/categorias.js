@@ -26,7 +26,11 @@ export const categoriasApi = {
   // NUEVAS FUNCIONES DE GESTIÓN DE CATEGORÍA
   updateCategory: (id, data) => apiClient.put(`/categorias/${id}`, data),
   deleteCategory: (id) => apiClient.delete(`/categorias/${id}`),
-  duplicateCategory: (id) => apiClient.post(`/categorias/duplicate/${id}`)
+  duplicateCategory: (id) => apiClient.post(`/categorias/duplicate/${id}`),
+
+  // NUEVAS FUNCIONES DE GESTIÓN DE SUBCATEGORÍA (EVENTOS)
+  deleteSubcategory: (id) => apiClient.delete(`/subcategorias/${id}`),
+  duplicateSubcategory: (id) => apiClient.post(`/subcategorias/duplicate/${id}`)
 };
 
 export default categoriasApi;
