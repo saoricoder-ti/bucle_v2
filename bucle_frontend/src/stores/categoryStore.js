@@ -239,7 +239,22 @@ export const useCategoryStore = defineStore('category', {
       const newBlock = {
         id: Date.now(),
         type: type,
-        content: type === 'map' ? { lat: -0.1807, lng: -78.4678 } : 
+        content: type === 'reminder' ? {
+          label: 'Nuevo Recordatorio',
+          date: new Date().toISOString().split('T')[0],
+          time: '12:00',
+          frequency: 'once',
+          isActive: true
+        } : type === 'cycle' ? { 
+          label: 'Nuevo Servicio Multi-medida', 
+          hasReminder: false,
+          reminderThreshold: 500,
+          reminderUnit: 'km',
+          items: [
+            { name: 'Métrica General', current: 0, target: 10000, unit: 'km' }
+          ]
+        } : 
+                 type === 'map' ? { lat: -0.1807, lng: -78.4678 } : 
                  type === 'table' ? { columns: ['Col 1', 'Col 2'], rows: [] } :
                  type === 'calendar' ? { selectedDate: new Date().toISOString(), events: [] } :
                  type === 'list' ? { items: [''] } : '',

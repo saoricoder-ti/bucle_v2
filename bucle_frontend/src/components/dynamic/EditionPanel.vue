@@ -106,6 +106,7 @@ const funcs = [
   { label: 'Checklist', type: 'checklist', icon: 'pi-check-square' },
   { label: 'Código', type: 'code', icon: 'pi-code' },
   { label: 'Calendario', type: 'calendar', icon: 'pi-calendar' },
-  { label: 'Lista', type: 'list', icon: 'pi-list' }
+  { label: 'Lista', type: 'list', icon: 'pi-list' },
+  { label: 'Ciclo', type: 'cycle', icon: 'pi-sync' }
 ];
 </script>

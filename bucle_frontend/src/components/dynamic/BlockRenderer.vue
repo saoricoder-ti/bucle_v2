@@ -72,6 +72,12 @@
     <!-- Bloque de Checklist -->
     <ChecklistBlock v-else-if="block.type === 'checklist'" :block="block" :readOnly="readOnly" />
 
+    <!-- Bloque de Ciclo -->
+    <CycleBlock v-else-if="block.type === 'cycle'" :block="block" />
+
+    <!-- Bloque de Recordatorio -->
+    <ReminderBlock v-else-if="block.type === 'reminder'" :block="block" />
+
     <!-- Bloque de Imagen -->
     <div v-else-if="block.type === 'image'" class="my-4 rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-transform hover:scale-[1.01] duration-500 relative bg-slate-50">
       <div v-if="!block.content" class="flex flex-col items-center justify-center p-8 cursor-pointer" @click="fileInput.click()">
@@ -211,6 +217,8 @@ import MapBlock from './MapBlock.vue';
 import CalendarBlock from './CalendarBlock.vue';
 import ListBlock from './ListBlock.vue';
 import ChecklistBlock from './ChecklistBlock.vue';
+import CycleBlock from './CycleBlock.vue';
+import ReminderBlock from './ReminderBlock.vue';
 
 const props = defineProps({
   block: { type: Object, required: true },

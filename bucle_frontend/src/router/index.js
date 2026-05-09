@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
+const DummyComponent = { render: () => null };
+
 const routes = [
   { path: '/', redirect: '/workspace' },
-  { path: '/workspace', name: 'workspace-home', component: () => {} }, // placeholder
-  { path: '/workspace/:categoryName/:subCategoryName?', name: 'workspace', component: () => {} }
+  { path: '/workspace', name: 'workspace-home', component: DummyComponent },
+  { path: '/workspace/:categoryName/:subCategoryName?', name: 'workspace', component: DummyComponent }
 ];
 
 const router = createRouter({
