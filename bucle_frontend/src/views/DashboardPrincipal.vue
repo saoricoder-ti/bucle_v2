@@ -7,7 +7,7 @@
     </header>
 
     <!-- Grid de Subcategorías -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" :key="store.activeCategory?.id">
       
       <!-- Estado de Carga (Esqueletos) -->
       <template v-if="store.loading && store.subcategories.length === 0">
@@ -17,7 +17,7 @@
       <!-- Lista de Tarjetas -->
       <template v-else>
         <SubcategoryCard 
-          v-for="sub in store.subcategories" 
+          v-for="sub in computedSubcategories" 
           :key="sub.id" 
           :data="sub"
           @click="store.openEditor(sub)" 
@@ -39,8 +39,12 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { useCategoryStore } from '@/stores/categoryStore';
 import SubcategoryCard from '@/components/dynamic/SubcategoryCard.vue';
 
 const store = useCategoryStore();
+
+// Aseguramos la reactividad profunda para el mapeo
+const computedSubcategories = computed(() => store.subcategories);
 </script>

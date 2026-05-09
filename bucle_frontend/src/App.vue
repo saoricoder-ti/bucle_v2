@@ -17,7 +17,7 @@
         <transition name="fade">
           <button 
             v-if="store.view === 'editor'"
-            @click="store.goBack"
+            @click="store.goBack()"
             class="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 text-white shadow-xl hover:bg-indigo-600 transition-all active:scale-90 group"
             title="Volver al Dashboard"
           >
@@ -27,9 +27,9 @@
 
         <div class="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
           <i class="pi pi-home text-[12px] opacity-70"></i>
-          <span>Workspace</span> 
-          <span class="opacity-30">/</span> 
-          <span class="text-indigo-600 font-black">{{ store.activeCategory?.nombre || 'Dashboard' }}</span>
+          <span class="cursor-pointer hover:text-indigo-600 transition-colors" @click="store.resetToWelcome()">Workspace</span> 
+          <span v-if="store.activeCategory" class="opacity-30">/</span> 
+          <span v-if="store.activeCategory" class="text-indigo-600 font-black">{{ store.activeCategory.nombre }}</span>
           <transition name="fade">
             <span v-if="store.activeSub" class="flex items-center gap-3">
               <span class="opacity-30">/</span>
@@ -45,7 +45,8 @@
         <!-- Lienzo Central (Dashboard o Editor) -->
         <main class="flex-1 overflow-y-auto z-10 custom-scrollbar bg-transparent">
           <transition name="fade-slide" mode="out-in">
-            <DashboardPrincipal v-if="store.view === 'dashboard'" :key="'dash'" />
+            <DashboardBienvenida v-if="!store.activeCategory && !store.loading" :key="'welcome'" />
+            <DashboardPrincipal v-else-if="store.view === 'dashboard'" :key="'dash'" />
             <EditorCanvas v-else-if="store.view === 'editor'" :key="'edit'" />
           </transition>
         </main>
@@ -53,7 +54,7 @@
         <!-- 3. Banner Derecho (Panel de Edición) -->
         <transition name="slide-right">
           <aside 
-            v-if="store.view === 'editor' && store.activeSub" 
+            v-if="store.isEditionPanelOpen && store.view === 'editor' && store.activeSub" 
             class="w-[320px] flex-shrink-0 z-20 border-l border-gray-100 bg-white shadow-2xl flex flex-col overflow-hidden"
           >
             <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
@@ -77,6 +78,7 @@ import { onMounted } from 'vue';
 import { useCategoryStore } from '@/stores/categoryStore';
 import CategorySidebar from '@/components/layout/CategorySidebar.vue';
 import DashboardPrincipal from '@/views/DashboardPrincipal.vue';
+import DashboardBienvenida from '@/views/DashboardBienvenida.vue';
 import EditorCanvas from '@/views/EditorCanvas.vue';
 import EditionPanel from '@/components/dynamic/EditionPanel.vue';
 import CategoryForm from '@/components/dynamic/CategoryForm.vue';

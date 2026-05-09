@@ -1,7 +1,15 @@
 <template>
   <div v-if="store.activeSub" class="flex flex-col h-full animate-slide-in">
-    <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-8">Panel de Edición</h3>
-
+    <div class="flex items-center gap-3 mb-8">
+      <button 
+        @click="store.toggleEditionPanel()"
+        class="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-100 transition-all text-slate-400 hover:text-slate-700 shadow-sm"
+        title="Ocultar Panel"
+      >
+        <i class="pi pi-arrow-right text-[10px]"></i>
+      </button>
+      <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] m-0">Panel de Edición</h3>
+    </div>
     <!-- Sección 1: Propiedades Base -->
     <section class="space-y-6 mb-10">
       <div class="group">

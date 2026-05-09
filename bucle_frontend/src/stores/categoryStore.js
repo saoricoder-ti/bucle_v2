@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { categoriasApi } from '@/api/endpoints/categorias';
+import router from '@/router';
 
 export const useCategoryStore = defineStore('category', {
   /**
@@ -22,6 +23,7 @@ export const useCategoryStore = defineStore('category', {
     categoryFormMode: 'create',          // 'create' o 'edit'
     categoryEditingId: null,             // ID de la categoría que se está renombrando inline
     subEditingId: null,                  // ID de la subcategoría que se está renombrando inline
+    isEditionPanelOpen: true,            // Control del panel de edición
   }),
 
   /**
@@ -34,6 +36,13 @@ export const useCategoryStore = defineStore('category', {
     showSuccess(msg) {
       this.toast = { show: true, message: msg };
       setTimeout(() => { this.toast.show = false; }, 4000);
+    },
+
+    /**
+     * Alterna la visibilidad del panel de edición
+     */
+    toggleEditionPanel() {
+      this.isEditionPanelOpen = !this.isEditionPanelOpen;
     },
 
     /**
@@ -132,11 +141,6 @@ export const useCategoryStore = defineStore('category', {
       try {
         const res = await categoriasApi.fetchCategories();
         this.categories = res.data;
-        
-        // Seleccionamos la primera por defecto si no hay ninguna activa
-        if (this.categories.length > 0 && !this.activeCategory) {
-          await this.selectCategory(this.categories[0]);
-        }
       } catch (err) {
         this.error = "Error al conectar con el servidor";
         console.error(err);
@@ -151,6 +155,7 @@ export const useCategoryStore = defineStore('category', {
     async selectCategory(cat) {
       this.activeCategory = cat;
       this.view = 'dashboard';
+      this.activeSub = null;
       this.loading = true;
       try {
         const res = await categoriasApi.fetchSubcategories(cat.id);
@@ -164,6 +169,7 @@ export const useCategoryStore = defineStore('category', {
         this.schema = null;
       } finally {
         this.loading = false;
+        router.push({ name: 'workspace', params: { categoryName: cat.nombre.toLowerCase() } });
       }
     },
 
@@ -203,6 +209,14 @@ export const useCategoryStore = defineStore('category', {
           { id: 'start-' + Date.now(), type: 'text', content: '', style: 'p' }
         ];
       }
+      
+      router.push({ 
+        name: 'workspace', 
+        params: { 
+          categoryName: this.activeCategory.nombre.toLowerCase(), 
+          subCategoryName: sub.nombre.toLowerCase() 
+        } 
+      });
     },
 
     /**
@@ -253,7 +267,12 @@ export const useCategoryStore = defineStore('category', {
           emoji: '✨',
           color: '#6366f1', // Color inicial premium
           descripcion: 'Haz clic para editar...',
-          blocks: [] 
+          blocks: [
+            // Bloque de título (oculto en el canvas, se usa para el breadcrumb/H1)
+            { id: 'title-' + Date.now(), type: 'text', content: 'Nuevo Evento', style: 'h1', role: 'main-title' },
+            // Primer bloque de texto real para que el usuario empiece a escribir
+            { id: 'start-' + Date.now(), type: 'text', content: '', style: 'p' }
+          ] 
         };
 
         const res = await categoriasApi.registrarSubcategoria(payload);
@@ -280,16 +299,24 @@ export const useCategoryStore = defineStore('category', {
     /**
      * Regresa al dashboard principal de forma fluida
      */
-    goBack() {
-      this.view = 'dashboard';
+    async goBack() {
       this.activeSub = null;
-      
-      // Sincronizamos en segundo plano para no bloquear la UI
       if (this.activeCategory) {
-        categoriasApi.fetchSubcategories(this.activeCategory.id).then(res => {
-          this.subcategories = res.data;
-        }).catch(err => console.error("Error al refrescar dashboard:", err));
+        await this.selectCategory(this.activeCategory);
+      } else {
+        this.view = 'dashboard';
+        router.push('/workspace');
       }
+    },
+
+    /**
+     * Vuelve a la pantalla de bienvenida
+     */
+    resetToWelcome() {
+      this.activeCategory = null;
+      this.activeSub = null;
+      this.view = 'dashboard';
+      router.push('/workspace');
     },
 
     /**

@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import DashboardPrincipal from '../views/DashboardPrincipal.vue';
 
 const routes = [
-  { path: '/', redirect: '/dashboard' },
-  { path: '/dashboard', name: 'Dashboard', component: DashboardPrincipal }
+  { path: '/', redirect: '/workspace' },
+  { path: '/workspace', name: 'workspace-home', component: () => {} }, // placeholder
+  { path: '/workspace/:categoryName/:subCategoryName?', name: 'workspace', component: () => {} }
 ];
 
 const router = createRouter({

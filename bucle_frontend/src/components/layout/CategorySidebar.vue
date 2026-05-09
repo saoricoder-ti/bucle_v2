@@ -1,15 +1,15 @@
 <template>
   <aside class="w-full bg-white flex flex-col h-screen p-6 border-r border-gray-100 transition-colors duration-500 relative">
     <!-- Branding -->
-    <div class="mb-10 flex items-center justify-between">
+    <div class="mb-10 flex items-center justify-between cursor-pointer group" @click="store.resetToWelcome()">
       <div>
         <div class="flex items-center gap-2 mb-1">
-          <div class="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center">
+          <div class="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
             <i class="pi pi-sync text-white text-[10px] animate-spin-slow"></i>
           </div>
-          <h1 class="text-2xl font-black tracking-tighter text-slate-900">BUCLE</h1>
+          <h1 class="text-2xl font-black tracking-tighter text-slate-900 group-hover:text-indigo-600 transition-colors">BUCLE</h1>
         </div>
-        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-8">Workspace</p>
+        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-8 group-hover:text-indigo-400 transition-colors">Dashboard</p>
       </div>
     </div>
 

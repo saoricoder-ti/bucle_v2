@@ -87,6 +87,18 @@
         />
       </div>
     </div>
+
+    <!-- Gatillo de Apertura del Panel -->
+    <transition name="fade">
+      <button 
+        v-if="!store.isEditionPanelOpen"
+        @click="store.toggleEditionPanel()"
+        class="fixed top-20 right-0 z-50 flex items-center justify-center w-10 h-10 rounded-l-2xl bg-white/70 backdrop-blur-md border border-r-0 border-slate-200 shadow-lg text-slate-600 hover:text-indigo-600 hover:bg-white transition-all group"
+        title="Mostrar Panel de Edición"
+      >
+        <i class="pi pi-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform"></i>
+      </button>
+    </transition>
   </div>
 
   <!-- 3. Empty State del Editor -->

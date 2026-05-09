@@ -69,9 +69,30 @@
     <!-- Bloque de Lista -->
     <ListBlock v-else-if="block.type === 'list'" :block="block" :readOnly="readOnly" />
 
+    <!-- Bloque de Checklist -->
+    <ChecklistBlock v-else-if="block.type === 'checklist'" :block="block" :readOnly="readOnly" />
+
     <!-- Bloque de Imagen -->
-    <div v-else-if="block.type === 'image'" class="my-4 rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-transform hover:scale-[1.01] duration-500">
-      <img :src="block.content" class="w-full h-auto object-cover max-h-[500px]" />
+    <div v-else-if="block.type === 'image'" class="my-4 rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-transform hover:scale-[1.01] duration-500 relative bg-slate-50">
+      <div v-if="!block.content" class="flex flex-col items-center justify-center p-8 cursor-pointer" @click="fileInput.click()">
+        <i class="pi pi-image text-3xl text-slate-400 mb-2"></i>
+        <p class="text-sm text-slate-500">Haz clic para subir una imagen</p>
+        <input 
+          type="file" 
+          ref="fileInput" 
+          class="hidden" 
+          accept="image/*" 
+          @change="handleImageUpload" 
+        />
+      </div>
+      <div v-else class="relative group">
+        <img :src="block.content" class="w-full h-auto object-cover max-h-[500px]" />
+        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button @click="block.content = ''; store.saveActiveSub();" class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 text-slate-400 hover:text-red-500">
+            <i class="pi pi-trash text-xs"></i>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Bloque de Casilla (Checkbox) -->
@@ -189,6 +210,7 @@ import TableBlock from './TableBlock.vue';
 import MapBlock from './MapBlock.vue';
 import CalendarBlock from './CalendarBlock.vue';
 import ListBlock from './ListBlock.vue';
+import ChecklistBlock from './ChecklistBlock.vue';
 
 const props = defineProps({
   block: { type: Object, required: true },
@@ -200,6 +222,20 @@ const editableDiv = ref(null);
 const isFocused = ref(false);
 const isEditing = ref(false);
 const showTransformMenu = ref(false);
+const fileInput = ref(null);
+
+const handleImageUpload = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    // eslint-disable-next-line vue/no-mutating-props
+    props.block.content = event.target.result; // Base64
+    store.saveActiveSub();
+  };
+  reader.readAsDataURL(file);
+};
 
 const transformOptions = [
   {
@@ -214,6 +250,7 @@ const transformOptions = [
       { label: 'Personas', icon: 'pi-users', type: 'people' },
       { label: 'Archivos y multimedia', icon: 'pi-file', type: 'file' },
       { label: 'Casilla', icon: 'pi-check-square', type: 'checkbox' },
+      { label: 'Lista de tareas', icon: 'pi-list', type: 'checklist' },
       { label: 'URL', icon: 'pi-link', type: 'url' },
       { label: 'Correo electrónico', icon: 'pi-envelope', type: 'email' },
       { label: 'Teléfono', icon: 'pi-phone', type: 'phone' },
@@ -231,6 +268,7 @@ const transformBlock = (type) => {
   else if (type === 'table') props.block.content = { columns: ['Col 1', 'Col 2'], rows: [] };
   else if (type === 'calendar') props.block.content = { selectedDate: new Date().toISOString(), events: [] };
   else if (type === 'list') props.block.content = { items: [''] };
+  else if (type === 'checklist') props.block.content = { items: [{ checked: false, text: '' }] };
   else if (type === 'checkbox') props.block.content = { checked: false, label: '' };
   else props.block.content = '';
   
