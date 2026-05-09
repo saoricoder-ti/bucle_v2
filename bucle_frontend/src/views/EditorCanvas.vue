@@ -40,13 +40,13 @@
         <draggable 
           v-model="draggableBlocks" 
           item-key="id"
-          class="space-y-6 min-h-[500px]"
+          class="flex flex-wrap gap-4 min-h-[500px]"
           handle=".drag-handle"
           ghost-class="drag-ghost"
-          animation="300"
+          animation="200"
         >
           <template #item="{ element }">
-            <div class="group relative p-4 border border-transparent hover:border-slate-200 hover:bg-slate-50/50 rounded-2xl transition-all duration-300">
+            <div class="group relative p-4 border border-transparent hover:border-slate-200 hover:bg-slate-50/50 rounded-2xl transition-all duration-300 min-w-[300px] flex-1">
               <!-- Tirador de arrastre (Drag Handle) -->
               <div class="drag-handle absolute top-3 right-3 opacity-0 group-hover:opacity-100 cursor-move text-slate-400 hover:text-slate-600 transition-all p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 z-20 hover:scale-110 hover:shadow-md">
                 <i class="pi pi-arrows-alt text-xs"></i>
