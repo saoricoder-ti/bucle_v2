@@ -271,17 +271,7 @@ const transformBlock = (type) => {
   if (props.readOnly) return;
   // eslint-disable-next-line vue/no-mutating-props
   props.block.type = type;
-  // Inicializar contenido según el tipo
-  if (type === 'map') props.block.content = { lat: -0.1807, lng: -78.4678 };
-  else if (type === 'table') props.block.content = { columns: ['Col 1', 'Col 2'], rows: [] };
-  else if (type === 'calendar') props.block.content = { selectedDate: new Date().toISOString(), events: [] };
-  else if (type === 'list') props.block.content = { items: [''] };
-  else if (type === 'checklist') props.block.content = { items: [{ checked: false, text: '' }] };
-  else if (type === 'checkbox') props.block.content = { checked: false, label: '' };
-  else props.block.content = '';
-  
   showTransformMenu.value = false;
-  store.saveActiveSub();
 };
 
 const enableEditing = () => {
@@ -303,6 +293,12 @@ onMounted(() => {
 watch(() => props.block.content, (newVal) => {
   if (editableDiv.value && !isFocused.value && editableDiv.value.innerText !== newVal) {
     editableDiv.value.innerText = newVal || '';
+  }
+});
+
+watch(() => props.block.type, (newType, oldType) => {
+  if (newType !== oldType && newType) {
+    store.resetBlockContent(props.block);
   }
 });
 

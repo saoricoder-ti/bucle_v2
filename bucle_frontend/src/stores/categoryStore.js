@@ -2,6 +2,17 @@ import { defineStore } from 'pinia';
 import { categoriasApi } from '@/api/endpoints/categorias';
 import router from '@/router';
 
+export const TOOL_SCHEMAS = {
+  text: { text: '', properties: {} },
+  table: { columns: [], rows: [] },
+  map: { lat: -0.1807, lng: -78.4678, zoom: 12 },
+  image: { url: '', caption: '' },
+  checklist: [{ id: 1, text: '', checked: false }],
+  calendar: { date: '', events: [] },
+  list: [{ id: 1, text: '' }],
+  cycle: { title: '', items: [] }
+};
+
 export const useCategoryStore = defineStore('category', {
   /**
    * Estado Global de la Aplicación
@@ -179,16 +190,44 @@ export const useCategoryStore = defineStore('category', {
     async saveActiveSub() {
       if (!this.activeSub) return;
       
+      if (this.activeSub.blocks) {
+        this.activeSub.blocks.forEach(block => this.ensureBehavior(block));
+      }
+
       try {
         await categoriasApi.updateSubcategory(this.activeSub.id, {
           nombre: this.activeSub.nombre,
           emoji: this.activeSub.emoji,
           color: this.activeSub.color,
           descripcion: this.activeSub.descripcion,
-          blocks: this.activeSub.blocks // El backend se encarga del json_encode
+          datos_extra: this.activeSub.blocks // El backend se encarga del json_encode
         });
       } catch (err) {
         console.error("Error en el auto-guardado:", err);
+      }
+    },
+
+    /**
+     * Verificación de esquema para bloques
+     */
+    ensureBehavior(block) {
+      const schema = TOOL_SCHEMAS[block.type];
+      if (!schema) return;
+      
+      if (!block.content) {
+        block.content = JSON.parse(JSON.stringify(schema));
+        return;
+      }
+
+      if (Array.isArray(schema)) {
+        if (!Array.isArray(block.content)) {
+          block.content = JSON.parse(JSON.stringify(schema));
+        }
+      } else if (typeof schema === 'object') {
+        const hasRequiredKeys = Object.keys(schema).every(key => key in block.content);
+        if (!hasRequiredKeys) {
+          block.content = { ...JSON.parse(JSON.stringify(schema)), ...block.content };
+        }
       }
     },
 
@@ -227,6 +266,20 @@ export const useCategoryStore = defineStore('category', {
       const block = this.activeSub.blocks.find(b => b.id === blockId);
       if (block) {
         block.content = newContent;
+      }
+    },
+
+    removeBlock(id) {
+      if (!this.activeSub || !this.activeSub.blocks) return;
+      this.activeSub.blocks = this.activeSub.blocks.filter(b => b.id !== id);
+      this.saveActiveSub();
+    },
+
+    resetBlockContent(block) {
+      const schema = TOOL_SCHEMAS[block.type];
+      if (schema) {
+        block.content = JSON.parse(JSON.stringify(schema));
+        this.saveActiveSub();
       }
     },
 
