@@ -80,7 +80,7 @@
 
     <!-- Bloque de Imagen -->
     <div v-else-if="block.type === 'image'" class="my-4 rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-transform hover:scale-[1.01] duration-500 relative bg-slate-50">
-      <div v-if="!block.content" class="flex flex-col items-center justify-center p-8 cursor-pointer" @click="fileInput.click()">
+      <div v-if="!block.content.url" class="flex flex-col items-center justify-center p-8 cursor-pointer" @click="fileInput.click()">
         <i class="pi pi-image text-3xl text-slate-400 mb-2"></i>
         <p class="text-sm text-slate-500">Haz clic para subir una imagen</p>
         <input 
@@ -92,9 +92,9 @@
         />
       </div>
       <div v-else class="relative group">
-        <img :src="block.content" class="w-full h-auto object-cover max-h-[500px]" />
+        <img :src="block.content.url" class="w-full h-auto object-cover max-h-[500px]" />
         <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button @click="block.content = ''; store.saveActiveSub();" class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 text-slate-400 hover:text-red-500">
+          <button @click="block.content.url = ''; store.saveActiveSub();" class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 text-slate-400 hover:text-red-500">
             <i class="pi pi-trash text-xs"></i>
           </button>
         </div>
@@ -239,7 +239,7 @@ const handleImageUpload = (e) => {
   const reader = new FileReader();
   reader.onload = (event) => {
     // eslint-disable-next-line vue/no-mutating-props
-    props.block.content = event.target.result; // Base64
+    props.block.content.url = event.target.result; // Base64
     store.saveActiveSub();
   };
   reader.readAsDataURL(file);
@@ -286,11 +286,11 @@ const enableEditing = () => {
 
 onMounted(() => {
   if (editableDiv.value) {
-    editableDiv.value.innerText = props.block.content || '';
+    editableDiv.value.innerText = props.block.content?.text || '';
   }
 });
 
-watch(() => props.block.content, (newVal) => {
+watch(() => props.block.content?.text, (newVal) => {
   if (editableDiv.value && !isFocused.value && editableDiv.value.innerText !== newVal) {
     editableDiv.value.innerText = newVal || '';
   }
@@ -305,7 +305,7 @@ watch(() => props.block.type, (newType, oldType) => {
 const handleInput = (e) => {
   if (props.readOnly) return;
   // eslint-disable-next-line vue/no-mutating-props
-  props.block.content = e.target.innerText;
+  props.block.content.text = e.target.innerText;
 };
 
 const handleBlur = () => {

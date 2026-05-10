@@ -22,18 +22,47 @@
             <EmojiPicker v-model="store.activeSub.emoji" />
           </div>
           
-          <input 
-            v-model="store.activeSub.nombre"
-            class="text-5xl font-black border-none focus:ring-0 p-0 w-full bg-transparent text-slate-900 tracking-tight mb-2 placeholder-slate-100"
-            placeholder="Título del evento..."
-          />
+          <h1 
+            :style="{ color: store.activeSub.color || '#0f172a' }" 
+            class="text-5xl font-black mb-4 transition-colors duration-300"
+          >
+            {{ store.activeSub.nombre || 'Título del evento...' }}
+          </h1>
           
-          <textarea 
-            v-model="store.activeSub.descripcion"
-            class="w-full mt-4 border-none focus:ring-0 p-0 bg-transparent text-slate-400 text-xl resize-none italic leading-relaxed"
-            placeholder="Añade una descripción corta..."
-            rows="1"
-          ></textarea>
+          <!-- Sistema de Etiquetas -->
+          <div class="flex flex-wrap gap-2 mt-4 items-center">
+            <span 
+              v-for="(tag, index) in store.activeSub.tags || []" 
+              :key="index"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-semibold tracking-wide"
+            >
+              {{ tag }}
+              <button @click="store.activeSub.tags.splice(index, 1); store.saveActiveSub()" class="hover:text-indigo-900 focus:outline-none transition-colors">
+                <i class="pi pi-times text-[10px]"></i>
+              </button>
+            </span>
+            
+            <div class="relative flex items-center">
+              <button 
+                v-if="!isAddingTag" 
+                @click="isAddingTag = true; nextTick(() => tagInput?.focus())"
+                class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors border border-dashed border-slate-300"
+                title="Añadir etiqueta"
+              >
+                <i class="pi pi-plus text-xs"></i>
+              </button>
+              <input 
+                v-else
+                ref="tagInput"
+                v-model="newTag"
+                @keyup.enter="addTag"
+                @blur="addTag"
+                @keyup.esc="isAddingTag = false; newTag = ''"
+                class="w-24 px-2 py-0.5 text-xs rounded-md bg-white border border-indigo-200 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-slate-700 placeholder-slate-300 transition-all"
+                placeholder="Nueva..."
+              />
+            </div>
+          </div>
         </header>
 
         <!-- Bloques de Contenido -->
@@ -125,7 +154,7 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue';
+import { computed, watch, ref, nextTick } from 'vue';
 import { useCategoryStore } from '@/stores/categoryStore';
 import debounce from 'lodash.debounce';
 import draggable from 'vuedraggable';
@@ -134,6 +163,22 @@ import BlockRenderer from '@/components/dynamic/BlockRenderer.vue';
 import SlashMenu from '@/components/dynamic/SlashMenu.vue';
 
 const store = useCategoryStore();
+
+const isAddingTag = ref(false);
+const newTag = ref('');
+const tagInput = ref(null);
+
+const addTag = () => {
+  if (newTag.value.trim()) {
+    if (!store.activeSub.tags) store.activeSub.tags = [];
+    if (!store.activeSub.tags.includes(newTag.value.trim())) {
+      store.activeSub.tags.push(newTag.value.trim());
+      store.saveActiveSub();
+    }
+  }
+  isAddingTag.value = false;
+  newTag.value = '';
+};
 
 const draggableBlocks = computed({
   get() {

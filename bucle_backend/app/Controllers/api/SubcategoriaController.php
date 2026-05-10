@@ -50,7 +50,8 @@ class SubcategoriaController extends ResourceController
             if (isset($json->nombre)) $data['nombre'] = $json->nombre;
             if (isset($json->emoji)) $data['emoji'] = $json->emoji;
             if (isset($json->color)) $data['color'] = $json->color;
-            if (isset($json->blocks)) $data['datos_extra'] = json_encode($json->blocks);
+            if (isset($json->datos_extra)) $data['datos_extra'] = json_encode($json->datos_extra);
+            if (isset($json->tags)) $data['descripcion'] = json_encode($json->tags);
 
             if ($this->model->update($id, $data)) {
                 return $this->respond(['status' => 'success', 'message' => 'Sincronizado']);
@@ -80,8 +81,8 @@ class SubcategoriaController extends ResourceController
                 'nombre'       => $json->nombre ?? 'Nuevo Evento',
                 'emoji'        => $json->emoji ?? '✨',
                 'color'        => $json->color ?? '#6366f1',
-                'descripcion'  => $json->descripcion ?? '',
-                'datos_extra'  => json_encode($json->blocks ?? [
+                'descripcion'  => isset($json->tags) ? json_encode($json->tags) : json_encode([]),
+                'datos_extra'  => isset($json->datos_extra) ? json_encode($json->datos_extra) : json_encode([
                     ['id' => 'block-' . time(), 'type' => 'text', 'content' => '', 'style' => 'p']
                 ])
             ];

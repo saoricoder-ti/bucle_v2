@@ -170,7 +170,24 @@ export const useCategoryStore = defineStore('category', {
       this.loading = true;
       try {
         const res = await categoriasApi.fetchSubcategories(cat.id);
-        this.subcategories = res.data;
+        this.subcategories = res.data.map(sub => {
+          let tagsArray = [];
+          try {
+            if (typeof sub.descripcion === 'string') {
+              tagsArray = JSON.parse(sub.descripcion);
+            } else if (Array.isArray(sub.descripcion)) {
+              tagsArray = sub.descripcion;
+            } else if (Array.isArray(sub.tags)) {
+              tagsArray = sub.tags;
+            }
+          } catch(e) {}
+
+          return {
+            ...sub,
+            blocks: Array.isArray(sub.datos_extra) ? sub.datos_extra : [],
+            tags: tagsArray
+          };
+        });
         
         // También intentamos cargar el esquema de la categoría
         const schemaRes = await categoriasApi.getSchema(cat.id);
@@ -199,11 +216,12 @@ export const useCategoryStore = defineStore('category', {
           nombre: this.activeSub.nombre,
           emoji: this.activeSub.emoji,
           color: this.activeSub.color,
-          descripcion: this.activeSub.descripcion,
-          datos_extra: this.activeSub.blocks // El backend se encarga del json_encode
+          tags: JSON.parse(JSON.stringify(this.activeSub.tags || [])),
+          datos_extra: JSON.parse(JSON.stringify(this.activeSub.blocks || []))
         });
       } catch (err) {
-        console.error("Error en el auto-guardado:", err);
+        this.toast = { show: true, message: 'Aviso: No se pudieron guardar los cambios automáticamente' };
+        setTimeout(() => { this.toast.show = false; }, 4000);
       }
     },
 
@@ -224,9 +242,10 @@ export const useCategoryStore = defineStore('category', {
           block.content = JSON.parse(JSON.stringify(schema));
         }
       } else if (typeof schema === 'object') {
-        const hasRequiredKeys = Object.keys(schema).every(key => key in block.content);
+        const isObj = block.content && typeof block.content === 'object' && !Array.isArray(block.content);
+        const hasRequiredKeys = isObj ? Object.keys(schema).every(key => key in block.content) : false;
         if (!hasRequiredKeys) {
-          block.content = { ...JSON.parse(JSON.stringify(schema)), ...block.content };
+          block.content = { ...JSON.parse(JSON.stringify(schema)), ...(isObj ? block.content : {}) };
         }
       }
     },
@@ -334,8 +353,8 @@ export const useCategoryStore = defineStore('category', {
           nombre: 'Nuevo Evento',
           emoji: '✨',
           color: '#6366f1', // Color inicial premium
-          descripcion: 'Haz clic para editar...',
-          blocks: [
+          tags: [],
+          datos_extra: [
             // Bloque de título (oculto en el canvas, se usa para el breadcrumb/H1)
             { id: 'title-' + Date.now(), type: 'text', content: 'Nuevo Evento', style: 'h1', role: 'main-title' },
             // Primer bloque de texto real para que el usuario empiece a escribir

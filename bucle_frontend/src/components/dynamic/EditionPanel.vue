@@ -16,6 +16,7 @@
         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-focus-within:text-indigo-600 transition-colors">Nombre del Evento</label>
         <input 
           v-model="store.activeSub.nombre" 
+          @blur="store.saveActiveSub"
           class="w-full mt-1.5 p-3 bg-slate-50 text-slate-900 rounded-2xl text-sm border-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium" 
           placeholder="Ej. Mantenimiento Preventivo"
         />
@@ -28,7 +29,7 @@
           <button 
             v-for="color in availableColors" 
             :key="color"
-            @click="store.activeSub.color = color"
+            @click="store.activeSub.color = color; store.saveActiveSub()"
             class="w-8 h-8 rounded-full border-4 transition-all hover:scale-110 active:scale-90 shadow-sm"
             :class="store.activeSub.color === color ? 'border-indigo-600 scale-110' : 'border-white'"
             :style="{ backgroundColor: color }"
