@@ -105,7 +105,7 @@ const funcs = [
   { label: 'Mapa', type: 'map', icon: 'pi-map' },
   { label: 'Imagen', type: 'image', icon: 'pi-image' },
   { label: 'Checklist', type: 'checklist', icon: 'pi-check-square' },
-  { label: 'Código', type: 'code', icon: 'pi-code' },
+  { label: 'Contenedor', type: 'frame', icon: 'pi-th-large' },
   { label: 'Calendario', type: 'calendar', icon: 'pi-calendar' },
   { label: 'Lista', type: 'list', icon: 'pi-list' },
   { label: 'Ciclo', type: 'cycle', icon: 'pi-sync' }
