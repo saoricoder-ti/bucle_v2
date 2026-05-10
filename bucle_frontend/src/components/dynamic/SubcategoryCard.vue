@@ -35,20 +35,23 @@
       >
         {{ data.nombre }}
       </h3>
-      
-      <p class="text-xs text-slate-500 leading-relaxed line-clamp-2 italic font-medium">
-        "{{ data.descripcion || 'Sin descripción detallada' }}"
-      </p>
     </div>
 
     <!-- Tags en la parte inferior -->
-    <div class="absolute bottom-8 left-8 flex gap-2">
-      <span 
-        class="px-3 py-1 rounded-full bg-slate-50 text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] border border-slate-100 shadow-inner"
-        :style="{ borderColor: (store.activeCategory?.color || '#f1f5f9') + '33' }"
+    <div class="absolute bottom-8 left-8 flex flex-wrap gap-2 max-w-[70%]">
+      <div 
+        v-if="computedTags.length === 0"
+        class="px-2.5 py-1 rounded-md bg-slate-50 text-[10px] font-bold text-slate-500 border border-slate-200 shadow-sm"
       >
-        #{{ store.activeCategory?.nombre || 'General' }}
-      </span>
+        General
+      </div>
+      <div 
+        v-for="(tag, index) in computedTags" 
+        :key="index"
+        class="px-2.5 py-1 rounded-md bg-slate-50 text-[10px] font-bold text-slate-500 border border-slate-200 shadow-sm"
+      >
+        {{ tag }}
+      </div>
     </div>
 
     <!-- BOTÓN DE ACCIÓN (TUERCA) -->
@@ -103,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useCategoryStore } from '@/stores/categoryStore';
 
 const props = defineProps({
@@ -116,6 +119,23 @@ const props = defineProps({
 const store = useCategoryStore();
 const showMenu = ref(false);
 const menuPos = ref({ x: 0, y: 0 });
+
+const computedTags = computed(() => {
+  const tagsData = props.data.tags || props.data.descripcion;
+  if (Array.isArray(tagsData)) return tagsData;
+  if (typeof tagsData === 'string') {
+    try {
+      const parsed = JSON.parse(tagsData);
+      if (Array.isArray(parsed)) return parsed;
+    } catch(e) {
+      // No es JSON, retorna un array con el string o vacío si es un placeholder
+      if (tagsData !== 'Haz clic para editar...' && tagsData.trim() !== '') {
+         return [tagsData];
+      }
+    }
+  }
+  return [];
+});
 
 const toggleMenu = (event) => {
   const rect = event.currentTarget.getBoundingClientRect();

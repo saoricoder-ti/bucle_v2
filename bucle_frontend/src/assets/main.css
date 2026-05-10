@@ -123,4 +123,21 @@
   from { width: 100%; }
   to { width: 0%; }
 }
-.animate-toast-progress { animation: toast-progress 4s linear forwards; }
+.toast-progress { animation: toast-progress 4s linear forwards; }
+
+/* 9. REDIMENSIÓN DE BLOQUES (RESIZING) */
+.resizable-block {
+  resize: both;
+  overflow: hidden;
+  min-width: 200px;
+  min-height: 50px;
+}
+/* Estilo del controlador nativo */
+.resizable-block::-webkit-resizer {
+  background-color: transparent;
+}
+
+/* 10. MENÚ DE TRANSFORMACIÓN */
+.transform-menu-container {
+  z-index: 9999 !important;
+}

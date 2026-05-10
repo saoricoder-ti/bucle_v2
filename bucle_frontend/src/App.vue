@@ -27,13 +27,13 @@
 
         <div class="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
           <i class="pi pi-home text-[12px] opacity-70"></i>
-          <span class="cursor-pointer hover:text-indigo-600 transition-colors" @click="store.resetToWelcome()">Workspace</span> 
-          <span v-if="store.activeCategory" class="opacity-30">/</span> 
-          <span v-if="store.activeCategory" class="text-indigo-600 font-black">{{ store.activeCategory.nombre }}</span>
+          <router-link :to="{ name: 'workspace' }" @click="store.resetToWelcome()" class="cursor-pointer hover:text-indigo-600 transition-colors">Workspace</router-link> 
+          <span v-if="route.params.categoryName" class="opacity-30">/</span> 
+          <span v-if="route.params.categoryName" class="text-indigo-600 font-black">{{ route.params.categoryName }}</span>
           <transition name="fade">
-            <span v-if="store.activeSub" class="flex items-center gap-3">
+            <span v-if="route.params.subName" class="flex items-center gap-3">
               <span class="opacity-30">/</span>
-              <span class="text-slate-900 truncate max-w-[250px]">{{ store.activeSub.nombre }}</span>
+              <span class="text-slate-900 truncate max-w-[250px] capitalize">{{ route.params.subName }}</span>
             </span>
           </transition>
         </div>
@@ -74,7 +74,8 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useCategoryStore } from '@/stores/categoryStore';
 import CategorySidebar from '@/components/layout/CategorySidebar.vue';
 import DashboardPrincipal from '@/views/DashboardPrincipal.vue';
@@ -86,8 +87,17 @@ import ImportLoader from '@/components/dynamic/ImportLoader.vue';
 import Toast from '@/components/common/Toast.vue';
 
 const store = useCategoryStore();
+const route = useRoute();
+
+watch(() => route.params, (newParams) => {
+  store.syncFromRoute(newParams.categoryName, newParams.subName);
+}, { immediate: true });
 
 onMounted(() => {
-  store.initApp();
+  if (store.categories.length === 0) {
+    store.initApp().then(() => {
+      store.syncFromRoute(route.params.categoryName, route.params.subName);
+    });
+  }
 });
 </script>
