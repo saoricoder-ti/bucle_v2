@@ -10,7 +10,27 @@ export const TOOL_SCHEMAS = {
   checklist: [{ id: 1, text: '', checked: false }],
   calendar: { date: '', events: [] },
   list: [{ id: 1, text: '' }],
-  cycle: { title: '', items: [] }
+  cycle: { title: '', items: [] },
+  frame: { blocks: [] }
+};
+
+export const SUBTYPE_SCHEMAS = {
+  text: { text: '' },
+  number: { value: 0 },
+  date: { date: null },
+  checkbox: { checked: false },
+  select: { selected: null, options: [] },
+  'multi-select': { selected: [], options: [] },
+  status: { status: 'Not Started' },
+  people: { users: [] },
+  file: { url: '', name: '' },
+  checklist: { items: [{ text: '', checked: false }] },
+  frame: { blocks: [] },
+  calendar: { selectedDate: new Date().toISOString(), events: [] },
+  url: { url: '' },
+  email: { email: '' },
+  phone: { phone: '' },
+  place: { location: '' }
 };
 
 export const useCategoryStore = defineStore('category', {
@@ -35,6 +55,7 @@ export const useCategoryStore = defineStore('category', {
     categoryEditingId: null,             // ID de la categoría que se está renombrando inline
     subEditingId: null,                  // ID de la subcategoría que se está renombrando inline
     isEditionPanelOpen: true,            // Control del panel de edición
+    selectedBlockIds: new Set(),         // Set para controlar bloques listos para mover
   }),
 
   /**
@@ -54,6 +75,14 @@ export const useCategoryStore = defineStore('category', {
      */
     toggleEditionPanel() {
       this.isEditionPanelOpen = !this.isEditionPanelOpen;
+    },
+
+    toggleBlockSelection(blockId) {
+      if (this.selectedBlockIds.has(blockId)) {
+        this.selectedBlockIds.delete(blockId);
+      } else {
+        this.selectedBlockIds.add(blockId);
+      }
     },
 
     /**
@@ -96,6 +125,11 @@ export const useCategoryStore = defineStore('category', {
         }
         await this.initApp(); // Refresca el sidebar
         this.isCreatingCategory = false;
+        
+        if (this.categoryFormMode !== 'edit') {
+           const newCat = this.categories.find(c => c.nombre.toLowerCase() === data.nombre.toLowerCase());
+           if (newCat) this.selectCategory(newCat);
+        }
       } catch (err) {
         console.error("Error al procesar categoría:", err);
       }
@@ -108,7 +142,17 @@ export const useCategoryStore = defineStore('category', {
       if (!confirm('¿Estás seguro de eliminar este Bucle? Se borrarán todos sus eventos.')) return;
       try {
         await categoriasApi.deleteCategory(id);
-        this.activeCategory = null;
+        
+        if (this.activeCategory && this.activeCategory.id === id) {
+          this.$patch({
+            activeCategory: null,
+            activeSub: null,
+            subcategories: [],
+            view: 'dashboard'
+          });
+          router.push('/workspace');
+        }
+        
         await this.initApp();
         this.showSuccess('Bucle eliminado');
       } catch (err) {
@@ -169,7 +213,17 @@ export const useCategoryStore = defineStore('category', {
       this.activeSub = null;
       this.loading = true;
       try {
-        const res = await categoriasApi.fetchSubcategories(cat.id);
+        await this.loadCategoryData(cat.id);
+      } finally {
+        this.loading = false;
+        router.push({ name: 'workspace', params: { categoryName: cat.nombre.toLowerCase() } });
+      }
+    },
+
+    async loadCategoryData(catId) {
+      this.subcategories = []; // Limpia el listado anterior
+      try {
+        const res = await categoriasApi.fetchSubcategories(catId);
         this.subcategories = res.data.map(sub => {
           let tagsArray = [];
           try {
@@ -182,22 +236,30 @@ export const useCategoryStore = defineStore('category', {
             }
           } catch(e) {}
 
+          let blocks = [];
+          let config = { fontSize: 'text-5xl', textAlign: 'text-left', textShadow: false, bgColor: 'transparent' };
+          
+          if (Array.isArray(sub.datos_extra)) {
+            blocks = sub.datos_extra;
+          } else if (sub.datos_extra && typeof sub.datos_extra === 'object') {
+            blocks = sub.datos_extra.blocks || [];
+            config = sub.datos_extra.config || sub.datos_extra.titleStyles || config;
+          }
+
           return {
             ...sub,
-            blocks: Array.isArray(sub.datos_extra) ? sub.datos_extra : [],
+            blocks,
+            config,
             tags: tagsArray
           };
         });
         
         // También intentamos cargar el esquema de la categoría
-        const schemaRes = await categoriasApi.getSchema(cat.id);
+        const schemaRes = await categoriasApi.getSchema(catId);
         this.schema = schemaRes.data;
       } catch (err) {
-        console.warn(`No se pudo cargar el esquema para ${cat.nombre}, usando genérico.`);
+        console.warn(`No se pudo cargar el esquema, usando genérico.`);
         this.schema = null;
-      } finally {
-        this.loading = false;
-        router.push({ name: 'workspace', params: { categoryName: cat.nombre.toLowerCase() } });
       }
     },
 
@@ -217,7 +279,10 @@ export const useCategoryStore = defineStore('category', {
           emoji: this.activeSub.emoji,
           color: this.activeSub.color,
           tags: JSON.parse(JSON.stringify(this.activeSub.tags || [])),
-          datos_extra: JSON.parse(JSON.stringify(this.activeSub.blocks || []))
+          datos_extra: JSON.parse(JSON.stringify({
+            blocks: this.activeSub.blocks || [],
+            config: this.activeSub.config || { fontSize: 'text-5xl', textAlign: 'text-left', textShadow: false, bgColor: 'transparent' }
+          }))
         });
       } catch (err) {
         this.toast = { show: true, message: 'Aviso: No se pudieron guardar los cambios automáticamente' };
@@ -229,7 +294,12 @@ export const useCategoryStore = defineStore('category', {
      * Verificación de esquema para bloques
      */
     ensureBehavior(block) {
-      const schema = TOOL_SCHEMAS[block.type];
+      let schema = TOOL_SCHEMAS[block.type];
+      
+      if (block.type === 'text' && block.subType) {
+        schema = SUBTYPE_SCHEMAS[block.subType] || schema;
+      }
+
       if (!schema) return;
       
       if (!block.content) {
@@ -262,17 +332,22 @@ export const useCategoryStore = defineStore('category', {
       if (!this.activeSub.blocks || this.activeSub.blocks.length === 0) {
         this.activeSub.blocks = [
           // Bloque de título (oculto en el canvas, se usa para el breadcrumb/H1)
-          { id: 'title-' + Date.now(), type: 'text', content: sub.nombre, style: 'h1', role: 'main-title' },
+          { id: 'title-' + Date.now(), type: 'text', content: sub.nombre, style: { format: 'h1', width: '100%', height: 'auto' }, role: 'main-title' },
           // Primer bloque de texto real para que el usuario empiece a escribir
-          { id: 'start-' + Date.now(), type: 'text', content: '', style: 'p' }
+          { id: 'start-' + Date.now(), type: 'text', content: '', style: { format: 'p', width: '100%', height: 'auto' } }
         ];
+      }
+
+      // Asegurar config
+      if (!this.activeSub.config) {
+        this.activeSub.config = { fontSize: 'text-5xl', textAlign: 'text-left', textShadow: false, bgColor: 'transparent' };
       }
       
       router.push({ 
         name: 'workspace', 
         params: { 
           categoryName: this.activeCategory.nombre.toLowerCase(), 
-          subCategoryName: sub.nombre.toLowerCase() 
+          subName: sub.nombre.toLowerCase() 
         } 
       });
     },
@@ -302,6 +377,16 @@ export const useCategoryStore = defineStore('category', {
       }
     },
 
+    resetTextBlock(blockId) {
+      if (!this.activeSub) return;
+      const block = this.activeSub.blocks.find(b => b.id === blockId);
+      if (block && block.type === 'text') {
+        block.subType = 'text';
+        block.content = JSON.parse(JSON.stringify(SUBTYPE_SCHEMAS['text'] || { text: '' }));
+        this.saveActiveSub();
+      }
+    },
+
     /**
      * Añade un nuevo bloque dinámico al editor
      */
@@ -326,17 +411,75 @@ export const useCategoryStore = defineStore('category', {
             { name: 'Métrica General', current: 0, target: 10000, unit: 'km' }
           ]
         } : 
+                 type === 'checklist' ? { items: [{ text: '', checked: false }] } :
+                 type === 'frame' ? { blocks: [] } :
                  type === 'map' ? { lat: -0.1807, lng: -78.4678 } : 
                  type === 'table' ? { columns: ['Col 1', 'Col 2'], rows: [] } :
                  type === 'calendar' ? { selectedDate: new Date().toISOString(), events: [] } :
                  type === 'list' ? { items: [''] } : '',
-        style: type === 'text' ? 'p' : null
+        style: { format: type === 'text' ? 'p' : null, width: '100%', height: 'auto' }
       };
 
       this.activeSub.blocks.push(newBlock);
       this.showSlashMenu = false;
       
       // Disparamos guardado automático al añadir bloque
+      this.saveActiveSub();
+    },
+
+    /**
+     * Añade un bloque dentro de un Frame específico
+     */
+    addBlockToFrame(frameId, type) {
+      if (!this.activeSub) return;
+      
+      let targetFrame = null;
+      const findFrame = (blocks) => {
+        if (!blocks) return;
+        for (let b of blocks) {
+          if (b.id === frameId) {
+            targetFrame = b;
+            return;
+          }
+          if (b.type === 'frame' && b.content?.blocks) {
+            findFrame(b.content.blocks);
+          }
+        }
+      };
+      
+      findFrame(this.activeSub.blocks);
+      
+      if (!targetFrame) return;
+
+      const newBlock = {
+        id: Date.now(),
+        type: type,
+        content: type === 'reminder' ? {
+          label: 'Nuevo Recordatorio',
+          date: new Date().toISOString().split('T')[0],
+          time: '12:00',
+          frequency: 'once',
+          isActive: true
+        } : type === 'cycle' ? { 
+          label: 'Nuevo Servicio Multi-medida', 
+          hasReminder: false,
+          reminderThreshold: 500,
+          reminderUnit: 'km',
+          items: [
+            { name: 'Métrica General', current: 0, target: 10000, unit: 'km' }
+          ]
+        } : 
+                 type === 'checklist' ? { items: [{ text: '', checked: false }] } :
+                 type === 'frame' ? { blocks: [] } :
+                 type === 'map' ? { lat: -0.1807, lng: -78.4678 } : 
+                 type === 'table' ? { columns: ['Col 1', 'Col 2'], rows: [] } :
+                 type === 'calendar' ? { selectedDate: new Date().toISOString(), events: [] } :
+                 type === 'list' ? { items: [''] } : '',
+        style: { format: type === 'text' ? 'p' : null, width: '100%', height: 'auto' }
+      };
+
+      if (!targetFrame.content.blocks) targetFrame.content.blocks = [];
+      targetFrame.content.blocks.push(newBlock);
       this.saveActiveSub();
     },
 
@@ -354,12 +497,13 @@ export const useCategoryStore = defineStore('category', {
           emoji: '✨',
           color: '#6366f1', // Color inicial premium
           tags: [],
-          datos_extra: [
-            // Bloque de título (oculto en el canvas, se usa para el breadcrumb/H1)
-            { id: 'title-' + Date.now(), type: 'text', content: 'Nuevo Evento', style: 'h1', role: 'main-title' },
-            // Primer bloque de texto real para que el usuario empiece a escribir
-            { id: 'start-' + Date.now(), type: 'text', content: '', style: 'p' }
-          ] 
+          datos_extra: {
+            blocks: [
+              { id: 'title-' + Date.now(), type: 'text', content: 'Nuevo Evento', style: { format: 'h1', width: '100%', height: 'auto' }, role: 'main-title' },
+              { id: 'start-' + Date.now(), type: 'text', content: '', style: { format: 'p', width: '100%', height: 'auto' } }
+            ],
+            config: { fontSize: 'text-5xl', textAlign: 'text-left', textShadow: false, bgColor: 'transparent' }
+          }
         };
 
         const res = await categoriasApi.registrarSubcategoria(payload);
@@ -389,7 +533,8 @@ export const useCategoryStore = defineStore('category', {
     async goBack() {
       this.activeSub = null;
       if (this.activeCategory) {
-        await this.selectCategory(this.activeCategory);
+        this.view = 'dashboard';
+        router.push({ name: 'workspace', params: { categoryName: this.activeCategory.nombre.toLowerCase() } });
       } else {
         this.view = 'dashboard';
         router.push('/workspace');
@@ -442,12 +587,51 @@ export const useCategoryStore = defineStore('category', {
       try {
         const res = await categoriasApi.duplicateSubcategory(id);
         if (res.data.status === 'success') {
-          const subRes = await categoriasApi.fetchSubcategories(this.activeCategory.id);
-          this.subcategories = subRes.data;
+          await this.loadCategoryData(this.activeCategory.id);
           this.showSuccess('Evento duplicado');
         }
       } catch (err) {
         console.error("Error al duplicar subcategoría:", err);
+      }
+    },
+
+    async syncFromRoute(categoryName, subName) {
+      if (this.categories.length === 0) await this.initApp();
+
+      if (!categoryName) {
+        this.activeCategory = null;
+        this.activeSub = null;
+        this.view = 'dashboard';
+        return;
+      }
+
+      const cat = this.categories.find(c => c.nombre.toLowerCase() === categoryName.toLowerCase());
+      if (cat && (!this.activeCategory || this.activeCategory.id !== cat.id)) {
+        this.activeCategory = cat;
+        this.loading = true;
+        await this.loadCategoryData(cat.id);
+        this.loading = false;
+      }
+
+      if (cat && subName) {
+        const sub = this.subcategories.find(s => s.nombre.toLowerCase() === subName.toLowerCase());
+        if (sub && (!this.activeSub || this.activeSub.id !== sub.id)) {
+          this.activeSub = sub;
+          this.view = 'editor';
+          
+          if (!this.activeSub.blocks || this.activeSub.blocks.length === 0) {
+            this.activeSub.blocks = [
+              { id: 'title-' + Date.now(), type: 'text', content: sub.nombre, style: { format: 'h1', width: '100%', height: 'auto' }, role: 'main-title' },
+              { id: 'start-' + Date.now(), type: 'text', content: '', style: { format: 'p', width: '100%', height: 'auto' } }
+            ];
+          }
+          if (!this.activeSub.config) {
+            this.activeSub.config = { fontSize: 'text-5xl', textAlign: 'text-left', textShadow: false, bgColor: 'transparent' };
+          }
+        }
+      } else if (cat) {
+        this.activeSub = null;
+        this.view = 'dashboard';
       }
     }
   }
