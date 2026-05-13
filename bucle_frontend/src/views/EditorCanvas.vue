@@ -13,7 +13,7 @@
   <div v-else-if="store.activeSub" class="flex-1 bg-white flex flex-col h-screen relative ltr overflow-hidden">
     
     <!-- Canvas de Edición (Notion-style) -->
-    <div class="flex-1 overflow-y-auto px-12 py-20 scroll-smooth custom-scrollbar">
+    <div class="flex-1 overflow-y-auto p-12 scroll-smooth custom-scrollbar">
       <div class="max-w-3xl mx-auto">
         
         <!-- Encabezado de Metadatos -->
