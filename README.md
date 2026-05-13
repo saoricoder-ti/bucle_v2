@@ -1,75 +1,195 @@
-# Bucle Workspace
+# Bucle Workspace v2
 
-**Bucle Workspace** es un ecosistema de trabajo inteligente, altamente escalable y dinámico, diseñado específicamente para la gestión estructurada de eventos y servicios. A través de una interfaz moderna y fluida, Bucle proporciona herramientas avanzadas de organización de datos, enfocándose en la productividad y en una experiencia de usuario (UX) excepcional.
+Ecosistema modular para la gestión de rutinas, hábitos y tareas recurrentes. El sistema permite construir tableros de control personalizados mediante un lienzo interactivo de bloques dinámicos, redimensionables y anidables.
+
+## 🚀 Requisitos del Sistema
+- **PHP**: 8.1+
+- **Node.js**: 18+
+- **Composer**: Última versión estable
+- **Base de Datos**: PostgreSQL (o Supabase) con soporte para tipos de datos JSONB.
+
+## 🛠️ Instalación y Despliegue
+
+### Backend (CodeIgniter 4)
+1. Navegue al directorio del backend:
+   ```bash
+   cd bucle_backend
+   ```
+2. Instale las dependencias de Composer:
+   ```bash
+   composer install
+   ```
+3. Configure el archivo de entorno:
+   ```bash
+   cp .env.example .env
+   ```
+   *Edite el archivo `.env` con sus credenciales de base de datos.*
+4. Inicie el servidor de desarrollo:
+   ```bash
+   php spark serve
+   ```
+
+### Frontend (Vue 3 + Vite)
+1. Navegue al directorio del frontend:
+   ```bash
+   cd bucle_frontend
+   ```
+2. Instale las dependencias de Node:
+   ```bash
+   npm install
+   ```
+3. Inicie el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+
+## 📂 Estructura del Proyecto (Lógica de Bloques)
+
+La lógica de renderizado dinámico reside en `src/components/dynamic`. A continuación se detalla la jerarquía de componentes clave:
+
+```text
+src/components/dynamic/
+├── BlockRenderer.vue       # Orquestador principal. Evalúa el 'type' del bloque y renderiza el componente correspondiente.
+├── FrameBlock.vue          # Componente contenedor. Implementa recursividad al invocar a BlockRenderer para sus bloques hijos.
+├── ChecklistBlock.vue      # Manejo de listas de tareas con estado booleano.
+├── CycleBlock.vue          # Visualización de progreso circular (SVG) para metas métricas.
+├── ListBlock.vue           # Listas simples de elementos.
+├── ReminderBlock.vue       # Gestión de alertas y frecuencias temporales.
+└── [Otros Bloques]         # Componentes especializados (Map, Table, Calendar, etc.)
+```
+
+## 🔐 Variables de Entorno
+
+### Backend (`bucle_backend/.env`)
+| Variable | Descripción | Ejemplo |
+| :--- | :--- | :--- |
+| `database.default.hostname` | Host de la base de datos | `localhost` |
+| `database.default.database` | Nombre de la base de datos | `bucle_db` |
+| `database.default.username` | Usuario de PostgreSQL | `postgres` |
+| `database.default.password` | Contraseña | `tu_password` |
+| `database.default.DBDriver` | Driver de conexión | `Postgre` |
+
+### Frontend (`bucle_frontend/.env`)
+| Variable | Descripción | Ejemplo |
+| :--- | :--- | :--- |
+| `VITE_API_URL` | URL base de la API REST | `http://localhost:8080` |
 
 ---
 
-## 🏗️ Arquitectura del Proyecto
+## 📝 Documentación de Bloques y Lógica
 
-El proyecto está construido sobre un stack tecnológico moderno y robusto, garantizando rendimiento, mantenibilidad y una excelente experiencia de desarrollo:
+### Lógica de Bloques y Subtipos
 
-- **Frontend Core**: **Vue 3** utilizando la **Composition API**, lo que permite una lógica de componentes más limpia, reactiva y modular.
-- **Gestión de Estado**: **Pinia** actúa como la fuente de verdad para el estado global de la aplicación, manejando de forma eficiente la información de categorías, subcategorías y sincronización de datos.
-- **Estilos y Diseño**: **Tailwind CSS** proporciona un sistema de utilidades CSS altamente personalizable, permitiendo la creación de interfaces responsivas y de estética premium de forma ágil.
-- **Backend API REST**: **CodeIgniter 4** (PHP) expone una API RESTful sólida y segura que maneja la lógica de negocio, autenticación y persistencia de datos, conectándose a los sistemas de bases de datos subyacentes.
+El sistema implementa un esquema de subtipos para el bloque de texto y un sistema avanzado de ciclos de progreso.
 
----
+#### Subtipos de Propiedad de Texto (Esquemas dinámicos)
+Aunque el backend persiste los datos de forma general, el frontend interpreta el contenido basándose en `SUBTYPE_SCHEMAS`. Los principales subtipos utilizados para modelar propiedades son:
 
-## 🧩 Sistema de Bloques Dinámicos (Core)
+1. **`text`**: Cadena de texto plano.
+2. **`number`**: Valor numérico.
+3. **`date`**: Fecha con soporte para ISO strings.
+4. **`checkbox`**: Estado booleano.
+5. **`select`**: Selección única con arreglo de opciones.
+6. **`multi-select`**: Selección múltiple.
+7. **`status`**: Estado de flujo de trabajo (ej: 'Not Started', 'In Progress').
+8. **`people`**: Arreglo de identificadores de usuario.
+9. **`file`**: Objeto con URL y nombre del recurso.
+10. **`url`**: Validación y renderizado de enlaces.
+11. **`email`**: Dirección de correo electrónico.
+12. **`phone`**: Número telefónico.
+13. **`place`**: Datos de geolocalización o dirección.
+14. **`frame`**: Referencia a un contenedor anidado.
 
-El corazón del editor de Bucle es su **Sistema de Bloques Dinámicos**. Este motor permite componer documentos complejos a través de componentes modulares.
-
-### BlockRenderer y Persistencia
-El motor principal utiliza un componente `BlockRenderer` que interpreta dinámicamente una estructura de datos en formato **JSON**. Cada bloque es un componente aislado que se renderiza según su `type` y actualiza su propio fragmento de datos. Todo el documento se guarda y se recupera como un único objeto JSON estructurado, facilitando la integridad estructural y simplificando la sincronización con la base de datos.
-
-### Bloques Implementados
-El ecosistema cuenta con un repertorio creciente de bloques funcionales:
-- **Texto**: Cabeceras (`H1`) y Párrafos (`P`) con edición rica e intuitiva.
-- **Tablas**: Estructuras de datos tabulares dinámicas para organizar métricas o listados.
-- **Mapas**: Integración de geolocalización y visualización de ubicaciones clave.
-- **Imágenes**: Soporte para la inserción y previsualización de contenido multimedia.
-- **Checklists**: Listas de tareas interactivas con **persistencia de estado** (marca de completado) en tiempo real.
-- **Calendarios**: Herramientas de programación y control de fechas críticas.
-- **Listas**: Listas de viñetas para enumeraciones y organización de puntos.
-- **Ciclos de Progreso (Progress Rings)**: Componentes trazadores visuales dinámicos para monitorear metas numéricas y ciclos operativos (ej. ciclos de servicio de kilometraje), sincronizados reactivamente con los datos del servidor.
-
----
-
-## 💫 Experiencia de Usuario (UX)
-
-La plataforma está obsesionada con ofrecer una experiencia de usuario que reduzca la fricción cognitiva:
-
-- **Reordenamiento Intuitivo**: Mediante la integración de `vuedraggable`, los usuarios pueden reorganizar cualquier bloque dentro del documento simplemente arrastrando y soltando (Drag & Drop), ofreciendo una libertad estructural total.
-- **Edición Inline**: Las subcategorías y los títulos de los bloques pueden editarse directamente en el lugar (inline), sin necesidad de abrir modales disruptivos.
-- **Selector de Propiedades (Estilo Notion)**: Bucle implementa un sistema de menús contextuales y selectores de bloques `/` inspirados en Notion. Los usuarios pueden invocar herramientas y cambiar tipos de bloques mediante atajos de teclado o clics rápidos en la interfaz.
+#### Sistema de Ciclos de Progreso (`cycle`)
+El bloque de ciclo permite trackear métricas acumulativas contra un objetivo (target). Su estructura interna soporta:
+- **`current`**: Progreso actual.
+- **`target`**: Meta a alcanzar.
+- **`unit`**: Unidad de medida (ej: 'km', 'horas').
+- **Alertas**: Umbrales de notificación (`reminderThreshold`) para disparar eventos antes de completar el ciclo.
 
 ---
 
-## 🧭 Navegación Dinámica
+## 🔌 Guía de API (CodeIgniter 4)
 
-Bucle se despide de las arquitecturas de rutas rígidas y estáticas. El sistema implementa un flujo unificado y contextual:
+### Endpoints de Entidades
 
-- **Flujo Unificado**: El usuario transita naturalmente por la jerarquía: **Categoría → Dashboard → Editor** sin recargas de página ni pérdida de contexto.
-- **Rutas Automáticas**: Las rutas en la aplicación (URL) se construyen y resuelven automáticamente en base al nombre del registro activo o slug, sin necesidad de declarar cada ruta manualmente en el router. Esto permite que la plataforma escale infinitamente a medida que los usuarios crean nuevos espacios de trabajo o categorías.
+La API REST está estructurada para manejar la jerarquía de Categorías y Subcategorías (Eventos/Fichas).
 
----
+#### Categorías (Sidebar)
+- **`GET /categorias`**: Obtiene todas las categorías principales.
+- **`POST /categorias`**: Crea una nueva categoría.
+- **`PUT /categorias/:id`**: Actualiza el nombre o propiedades de la categoría.
+- **`DELETE /categorias/:id`**: Elimina la categoría y todas sus subcategorías asociadas.
+- **`POST /categorias/duplicate/:id`**: Duplica la categoría y su estructura.
 
-## ⚡ Gestión de Estado (Pinia)
+#### Subcategorías (Canvas / Editor)
+- **`GET /subcategorias/:categoria_id`**: Obtiene las subcategorías filtradas por la categoría padre.
+- **`POST /subcategorias`**: Crea una nueva ficha/evento inicializado con un bloque de título y un bloque de texto vacío.
+- **`PUT /subcategorias/:id`**: Endpoint crítico. Actualiza el contenido del canvas (bloques) y los estilos.
+- **`DELETE /subcategorias/:id`**: Elimina la ficha de forma permanente.
 
-El manejo de la información en tiempo real es gestionado por Pinia para asegurar la coherencia entre el cliente y el servidor:
+### Estructura de Payloads (Persistencia JSONB)
 
-- **`activeCategory` y `activeSub`**: Stores modulares mantienen el contexto exacto de dónde se encuentra el usuario, gestionando la categoría padre actual y la subcategoría/documento en edición.
-- **Sincronización `saveActiveSub`**: Cualquier cambio realizado en el editor, ya sea escribir un texto o marcar un checklist, dispara la acción `saveActiveSub`. Esto sincroniza de manera optimista y en tiempo real el estado local en JSON con el backend de CodeIgniter 4, garantizando que no se pierda ningún dato y manteniendo la UI siempre responsiva.
+El cuerpo de las peticiones `PUT /subcategorias/:id` y `POST /subcategorias` debe estructurarse enviando la configuración de estilos y la recursividad de Frames dentro del objeto `datos_extra`.
 
----
+#### Ejemplo de Payload completo para actualización:
 
-## 🎨 Guía de Estilos y Estética
+```json
+{
+  "nombre": "Rutina de Mantenimiento",
+  "emoji": "🔧",
+  "color": "#6366f1",
+  "tags": ["taller", "rutina"],
+  "datos_extra": {
+    "config": {
+      "fontSize": "text-5xl",
+      "textAlign": "text-left",
+      "textShadow": true,
+      "bgColor": "bg-slate-900"
+    },
+    "blocks": [
+      {
+        "id": "title-1620000000000",
+        "type": "text",
+        "content": "Rutina de Mantenimiento",
+        "role": "main-title",
+        "style": { "format": "h1", "width": "100%", "height": "auto" }
+      },
+      {
+        "id": "frame-1620000000001",
+        "type": "frame",
+        "content": {
+          "blocks": [
+            {
+              "id": "checklist-1620000000002",
+              "type": "checklist",
+              "content": {
+                "items": [
+                  { "text": "Revisar nivel de aceite", "checked": true },
+                  { "text": "Verificar presión de neumáticos", "checked": false }
+                ]
+              }
+            },
+            {
+              "id": "cycle-1620000000003",
+              "type": "cycle",
+              "content": {
+                "label": "Cambio de Filtros",
+                "hasReminder": true,
+                "reminderThreshold": 200,
+                "items": [
+                  { "name": "Kilometraje", "current": 4800, "target": 5000, "unit": "km" }
+                ]
+              }
+            }
+          ]
+        },
+        "style": { "width": "100%", "height": "auto" }
+      }
+    ]
+  }
+}
+```
 
-El diseño visual de Bucle no es un detalle menor; está pensado para ser moderno, relajante e inmersivo:
-
-- **Variables CSS y Modo Oscuro**: A través del archivo `main.css`, se definen variables nativas de CSS para la paleta de colores (Design Tokens). Esto permite un soporte nativo, performante y absoluto para **Modo Oscuro (Dark Mode)** y Modo Claro.
-- **Animaciones y Transiciones Suaves**: Todas las interacciones de UI (apertura de paneles, navegación entre páginas, renderizado de bloques) están acompañadas de transiciones calculadas (`slide-right`, `fade`, micro-interacciones), aportando una sensación "Premium" al uso diario.
-
----
-
-> *Bucle Workspace: Estructura tus ideas, controla tus ciclos y sincroniza tu trabajo.*
+> [!NOTE]
+> La recursividad se logra porque el objeto `content` de un bloque de tipo `frame` contiene a su vez un arreglo `blocks`, el cual puede contener infinitos niveles de anidación siguiendo la misma estructura.
