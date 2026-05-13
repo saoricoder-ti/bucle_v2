@@ -1,6 +1,31 @@
 /* 1. IMPORTACIÓN DE MOTOR DE ESTILOS */
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════
+   2. DESIGN TOKENS — Escala Modular y Layout
+   Fuente única de verdad para dimensiones y espaciado.
+   ═══════════════════════════════════════════════════ */
+:root {
+  /* Layout: Dimensiones fijas de la Matriz de 4 Paneles */
+  --sidebar-width: 220px;
+  --panel-width: 320px;
+  --header-height: 40px;
+  --footer-height: 36px;
+
+  /* Spacing Scale (Modular 4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Canvas: Padding uniforme del contenido central */
+  --bucle-canvas-padding: 3rem; /* p-12 */
+}
+
 @layer base {
   /* 2. RESETEO MAESTRO Y COMPORTAMIENTO BASE */
   *, ::before, ::after {
