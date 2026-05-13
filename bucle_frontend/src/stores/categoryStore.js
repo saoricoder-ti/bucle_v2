@@ -56,6 +56,8 @@ export const useCategoryStore = defineStore('category', {
     subEditingId: null,                  // ID de la subcategoría que se está renombrando inline
     isEditionPanelOpen: true,            // Control del panel de edición
     selectedBlockIds: new Set(),         // Set para controlar bloques listos para mover
+    isSaving: false,                     // Estado de sincronización activa
+    lastSavedAt: null,                   // Timestamp del último guardado exitoso
   }),
 
   /**
@@ -189,7 +191,13 @@ export const useCategoryStore = defineStore('category', {
     },
 
     /**
-     * 1. Inicializa la aplicación cargando las categorías principales
+     * Inicializa la aplicación cargando las categorías principales desde el backend.
+     * Actualiza el estado reactivo `categories` y gestiona el estado global de carga.
+     * 
+     * @async
+     * @function initApp
+     * @returns {Promise<void>} No retorna valor directo, muta el estado del store.
+     * @throws {Error} Si la conexión con la API falla.
      */
     async initApp() {
       this.loading = true;
@@ -264,7 +272,28 @@ export const useCategoryStore = defineStore('category', {
     },
 
     /**
-     * 3. Sincroniza los bloques y metadatos con la DB (Auto-guardado)
+     * Sincroniza los bloques y metadatos de la subcategoría activa con la base de datos.
+     * Antes de enviar, asegura que cada bloque cumpla con su esquema mediante `ensureBehavior`.
+     * Los datos se empaquetan en una estructura jerárquica dentro del campo `datos_extra`.
+     * 
+     * @async
+     * @function saveActiveSub
+     * @returns {Promise<void>}
+     * 
+     * @description
+     * Estructura del Payload JSONB enviado en `datos_extra`:
+     * {
+     *   "blocks": [
+     *      { "id": 123, "type": "frame", "content": { "blocks": [...] } },
+     *      ...
+     *   ],
+     *   "config": {
+     *      "fontSize": "text-5xl",
+     *      "textAlign": "text-left",
+     *      "textShadow": false,
+     *      "bgColor": "transparent"
+     *   }
+     * }
      */
     async saveActiveSub() {
       if (!this.activeSub) return;
@@ -273,6 +302,7 @@ export const useCategoryStore = defineStore('category', {
         this.activeSub.blocks.forEach(block => this.ensureBehavior(block));
       }
 
+      this.isSaving = true;
       try {
         await categoriasApi.updateSubcategory(this.activeSub.id, {
           nombre: this.activeSub.nombre,
@@ -284,9 +314,12 @@ export const useCategoryStore = defineStore('category', {
             config: this.activeSub.config || { fontSize: 'text-5xl', textAlign: 'text-left', textShadow: false, bgColor: 'transparent' }
           }))
         });
+        this.lastSavedAt = Date.now();
       } catch (err) {
         this.toast = { show: true, message: 'Aviso: No se pudieron guardar los cambios automáticamente' };
         setTimeout(() => { this.toast.show = false; }, 4000);
+      } finally {
+        this.isSaving = false;
       }
     },
 
@@ -428,7 +461,13 @@ export const useCategoryStore = defineStore('category', {
     },
 
     /**
-     * Añade un bloque dentro de un Frame específico
+     * Añade un bloque dentro de un Frame específico.
+     * Implementa una búsqueda recursiva dentro del árbol de bloques de la subcategoría activa.
+     * 
+     * @function addBlockToFrame
+     * @param {string|number} frameId - ID del bloque contenedor (Frame) donde se insertará el nuevo bloque.
+     * @param {string} type - Tipo de bloque a crear (ej: 'text', 'checklist', 'cycle').
+     * @returns {void} Llama internamente a `saveActiveSub()` para persistir el cambio.
      */
     addBlockToFrame(frameId, type) {
       if (!this.activeSub) return;
